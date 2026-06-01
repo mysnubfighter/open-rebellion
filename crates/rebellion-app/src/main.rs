@@ -508,8 +508,12 @@ async fn main() {
     let mut jedi_panel_state = JediPanelState::default();
     let mut bombardment_panel_state = BombardmentPanelState::default();
     // Character Group Profiles — toggled via `G` hotkey, persisted via
-    // rebellion_data::profile_store. Profiles are loaded lazily on first open.
-    let mut profiles_panel_state = rebellion_render::panels::profiles::ProfilesPanelState::default();
+    // rebellion_data::profile_store. Pre-load at startup so the missions
+    // panel can show "Profile suggests …" hints before the player ever
+    // opens the profiles UI.
+    let mut profiles_panel_state =
+        rebellion_render::panels::profiles::ProfilesPanelState::default();
+    profiles_panel_state.profiles = rebellion_data::profile_store::load_profiles();
     let mut mod_manager_state = rebellion_render::ModManagerState::default();
     #[cfg(debug_assertions)]
     let mut command_palette_state = rebellion_render::CommandPaletteState::new();
@@ -2079,6 +2083,7 @@ async fn main() {
                             &mut missions_panel_state,
                             player_faction,
                             duration_roll,
+                            &profiles_panel_state.profiles,
                         ) {
                             panel_actions.push(action);
                         }

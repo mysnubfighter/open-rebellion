@@ -15,6 +15,7 @@ use rebellion_core::ids::{CharacterKey, SystemKey};
 use rebellion_core::missions::{
     clamp_prob, quadratic_prob, ActiveMission, MissionFaction, MissionKind, MissionState,
 };
+use rebellion_core::profiles::{role_for, GroupProfile};
 use rebellion_core::world::GameWorld;
 
 use super::PanelAction;
@@ -63,6 +64,7 @@ pub fn draw_missions(
     panel_state: &mut MissionsPanelState,
     player_faction: MissionFaction,
     duration_roll: f64,
+    profiles: &[GroupProfile],
 ) -> Option<PanelAction> {
     panel_state.pending_duration_roll = duration_roll;
     let mut action = None;
@@ -104,7 +106,7 @@ pub fn draw_missions(
                     draw_active_tab(ui, world, mission_state, player_faction, &mut action);
                 }
                 MissionsTab::Dispatch => {
-                    draw_dispatch_tab(ui, world, panel_state, player_faction, &mut action);
+                    draw_dispatch_tab(ui, world, panel_state, player_faction, profiles, &mut action);
                 }
             }
         });
@@ -214,8 +216,46 @@ fn draw_dispatch_tab(
     world: &GameWorld,
     panel_state: &mut MissionsPanelState,
     player_faction: MissionFaction,
+    profiles: &[GroupProfile],
     action: &mut Option<PanelAction>,
 ) {
+    // ── Group profile hint (only when a commander is selected) ────────────
+    if let Some(commander) = panel_state.selected_commander {
+        if let Some(character) = world.characters.get(commander) {
+            let dat_id = character.dat_id.raw();
+            // Find the first enabled profile that assigns this character a role.
+            let suggestion = profiles
+                .iter()
+                .filter(|p| p.enabled)
+                .find_map(|p| role_for(p, dat_id).map(|kind| (p.name.as_str(), kind)));
+
+            if let Some((profile_name, suggested_kind)) = suggestion {
+                ui.horizontal(|ui| {
+                    ui.colored_label(
+                        Color32::from_rgb(255, 200, 80),
+                        RichText::new("◆ Profile").strong(),
+                    );
+                    ui.label(
+                        RichText::new(format!("\"{profile_name}\""))
+                            .small()
+                            .color(Color32::from_gray(180)),
+                    );
+                });
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new(format!("Preferred: {suggested_kind:?}"))
+                            .small()
+                            .color(Color32::from_rgb(200, 230, 180)),
+                    );
+                    if ui.small_button("Use").clicked() {
+                        panel_state.selected_kind = Some(suggested_kind);
+                    }
+                });
+                ui.separator();
+            }
+        }
+    }
+
     // ── Commander selection ───────────────────────────────────────────────────
     ui.label(RichText::new("Commander:").color(Color32::from_gray(180)).small().strong());
 

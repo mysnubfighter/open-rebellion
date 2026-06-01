@@ -106,40 +106,29 @@ mod native {
 pub use native::{default_profile_path, load_profiles, save_profiles};
 
 // =============================================================================
-// WASM (browser) implementation — localStorage
+// WASM (browser) implementation — in-memory only for now
 // =============================================================================
+//
+// The upstream WASM build vendors `gl.js` from macroquad/miniquad, which
+// doesn't include wasm-bindgen runtime shims. Calling `web_sys::Storage`
+// from inside the WASM blob causes the loader to fail with missing
+// `__wbg_*` imports. Until a proper macroquad-storage or wasm-bindgen JS
+// glue is added (separate PR), persistence on WASM is in-memory only
+// for the current session — players can still use the panel's
+// Import/Export JSON buttons to save & restore profiles manually.
 
 #[cfg(target_arch = "wasm32")]
 mod wasm {
     use super::*;
 
-    fn local_storage() -> Result<web_sys::Storage, ProfileStoreError> {
-        let window = web_sys::window()
-            .ok_or_else(|| ProfileStoreError::Io("no global window".into()))?;
-        window
-            .local_storage()
-            .map_err(|_| ProfileStoreError::Io("localStorage access denied".into()))?
-            .ok_or_else(|| ProfileStoreError::Io("localStorage not available".into()))
-    }
-
     pub fn load_profiles() -> Vec<GroupProfile> {
-        let storage = match local_storage() {
-            Ok(s) => s,
-            Err(_) => return Vec::new(),
-        };
-        let raw = match storage.get_item(STORAGE_KEY) {
-            Ok(Some(s)) => s,
-            _ => return Vec::new(),
-        };
-        import_json(&raw).unwrap_or_default()
+        // No-op load: in-memory only.
+        Vec::new()
     }
 
-    pub fn save_profiles(profiles: &[GroupProfile]) -> Result<(), ProfileStoreError> {
-        let storage = local_storage()?;
-        let json = export_json(profiles);
-        storage.set_item(STORAGE_KEY, &json).map_err(|_| {
-            ProfileStoreError::Io("localStorage.setItem failed (quota exceeded?)".into())
-        })?;
+    pub fn save_profiles(_profiles: &[GroupProfile]) -> Result<(), ProfileStoreError> {
+        // No-op save: in-memory only. Use the panel's "Copy export to text box"
+        // followed by manual paste-elsewhere to persist between sessions.
         Ok(())
     }
 }
