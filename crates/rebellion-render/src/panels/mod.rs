@@ -29,6 +29,7 @@ pub mod manufacturing;
 pub mod missions;
 pub mod mod_manager;
 pub mod officers;
+pub mod profiles;
 pub mod research;
 pub mod save_load;
 

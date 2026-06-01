@@ -507,6 +507,9 @@ async fn main() {
     let mut research_panel_state = ResearchPanelState::default();
     let mut jedi_panel_state = JediPanelState::default();
     let mut bombardment_panel_state = BombardmentPanelState::default();
+    // Character Group Profiles — toggled via `G` hotkey, persisted via
+    // rebellion_data::profile_store. Profiles are loaded lazily on first open.
+    let mut profiles_panel_state = rebellion_render::panels::profiles::ProfilesPanelState::default();
     let mut mod_manager_state = rebellion_render::ModManagerState::default();
     #[cfg(debug_assertions)]
     let mut command_palette_state = rebellion_render::CommandPaletteState::new();
@@ -698,6 +701,11 @@ async fn main() {
             }
             if is_key_pressed(KeyCode::E) {
                 enc_state.open = !enc_state.open;
+            }
+            if is_key_pressed(KeyCode::G) {
+                // Lazy-load profiles from store the first time the panel opens,
+                // so React-fork users' browser-saved profiles auto-import.
+                profiles_panel_state.toggle(|| rebellion_data::profile_store::load_profiles());
             }
             if is_key_pressed(KeyCode::Tab) {
                 mod_manager_state.open = !mod_manager_state.open;
@@ -2142,6 +2150,21 @@ async fn main() {
                         draw_encyclopedia(ctx, &world, &mut enc_state, &mut bmp_cache)
                     {
                         panel_actions.push(PanelAction::FocusFleetSystem(sys_key));
+                    }
+
+                    // Character Group Profiles (floating window)
+                    let profiles_saved =
+                        rebellion_render::panels::profiles::draw_profiles(
+                            ctx,
+                            &mut profiles_panel_state,
+                            &world,
+                        );
+                    if profiles_saved {
+                        if let Err(e) = rebellion_data::profile_store::save_profiles(
+                            &profiles_panel_state.profiles,
+                        ) {
+                            eprintln!("profile save failed: {e}");
+                        }
                     }
 
                     // Mod Manager (floating window)

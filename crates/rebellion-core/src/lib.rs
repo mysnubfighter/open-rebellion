@@ -17,6 +17,7 @@ pub mod manufacturing;
 pub mod missions;
 pub mod movement;
 pub mod net_protocol;
+pub mod profiles;
 pub mod repair;
 pub mod research;
 pub mod story_events;
