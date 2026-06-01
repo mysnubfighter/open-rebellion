@@ -1509,14 +1509,30 @@ function miniquad_add_plugin(plugin) {
 // read module imports and create fake functions in import object
 // this is will allow to successfeully link wasm even with wrong version of gl.js
 // needed to workaround firefox bug with lost error on wasm linking errors
+//
+// Patched (Open Rebellion fork): also stub *non-env* import modules
+// (notably wasm-bindgen's "__wbindgen_placeholder__" + "__wbindgen_externref_xform__"
+// which appear once anything in the workspace pulls in web_sys or js-sys).
+// Without this patch the loader fails with
+//   "Import #N 'mod': module is not an object or function"
+// even though gl.js stubs every individual function.
 function add_missing_functions_stabs(obj) {
     var imports = WebAssembly.Module.imports(obj);
 
     for (const i in imports) {
-        if (importObject["env"][imports[i].name] == undefined) {
-            console.warn("No " + imports[i].name + " function in gl.js");
-            importObject["env"][imports[i].name] = function () {
-                console.warn("Missed function: " + imports[i].name);
+        var mod = imports[i].module;
+        var name = imports[i].name;
+        if (importObject[mod] === undefined) {
+            importObject[mod] = {};
+        }
+        if (importObject[mod][name] === undefined) {
+            if (mod !== "env") {
+                console.warn("No " + name + " in " + mod + " — stubbing");
+            } else {
+                console.warn("No " + name + " function in gl.js");
+            }
+            importObject[mod][name] = function () {
+                console.warn("Missed function: " + mod + "." + name);
             };
         }
     }

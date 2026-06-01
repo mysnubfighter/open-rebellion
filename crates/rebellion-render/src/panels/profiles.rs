@@ -380,11 +380,23 @@ const MISSION_KINDS: &[MissionKind] = &[
 ];
 
 fn now_ms() -> u64 {
-    use std::time::{SystemTime, UNIX_EPOCH};
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as u64)
-        .unwrap_or(0)
+    // `SystemTime::now()` panics on the wasm32-unknown-unknown target.
+    // Use miniquad's wall-clock helper there — it's the one already
+    // wired through `gl.js` and works in the browser without
+    // wasm-bindgen.  Native uses the std impl.
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0)
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        // miniquad::date::now() returns seconds-since-epoch as f64.
+        (egui_macroquad::macroquad::miniquad::date::now() * 1000.0) as u64
+    }
 }
 
 /// Quick UUID-like id (timestamp + small random suffix).  Doesn't need
