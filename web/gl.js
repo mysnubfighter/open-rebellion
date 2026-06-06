@@ -1554,6 +1554,15 @@ function load(wasm_path) {
                     wasm_memory = obj.exports.memory;
                     wasm_exports = obj.exports;
 
+                    // Open Rebellion patch — feed the wasm exports into
+                    // the wasm-bindgen JS runtime so its shim functions
+                    // (web_sys, getItem/setItem, etc.) can call back into
+                    // the wasm for memory and table access.
+                    if (typeof wasm_bindgen !== "undefined" &&
+                        typeof wasm_bindgen.__wbg_set_wasm === "function") {
+                        wasm_bindgen.__wbg_set_wasm(obj.exports);
+                    }
+
                     var crate_version = wasm_exports.crate_version();
                     if (version != crate_version) {
                         console.error(

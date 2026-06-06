@@ -11,8 +11,42 @@
 </head>
 <body>
     <canvas id="glcanvas" tabindex="1"></canvas>
-    <!-- macroquad/miniquad JS glue — provides load() and WebGL bindings -->
+    <!-- macroquad/miniquad JS glue — defines importObject + load() -->
     <script src="gl.js"></script>
-    <script>load("open-rebellion.wasm");</script>
+    <!--
+      wasm-bindgen-generated runtime.  Its IIFE calls require("env") at top
+      level which would crash in a plain browser; stub it to return gl.js's
+      importObject.env so the IIFE can finish defining wasm_bindgen.
+      A patch at the end of bg/open-rebellion.js exposes
+      wasm_bindgen.__wbg_get_imports so we can pull its shim functions.
+    -->
+    <script>
+        var require = function(name) {
+            if (name === "env") return (typeof importObject !== "undefined") ? importObject.env : {};
+            throw new Error("require: unknown module " + name);
+        };
+    </script>
+    <script src="bg/open-rebellion.js"></script>
+    <script>
+        // Merge wasm-bindgen's shim functions into gl.js's importObject so
+        // the wasm-bindgen-processed bg.wasm finds both modules: env (from
+        // gl.js/macroquad) AND "./open-rebellion_bg.js" (the wasm-bindgen
+        // function table).  Then load bg.wasm via gl.js so macroquad's
+        // plugins still get initialized.
+        (function () {
+            try {
+                const bgImports = wasm_bindgen.__wbg_get_imports();
+                const shimTable = bgImports["./open-rebellion_bg.js"] || {};
+                importObject["./open-rebellion_bg.js"] = shimTable;
+                if (!importObject["__wbindgen_externref_xform__"]) {
+                    importObject["__wbindgen_externref_xform__"] = {};
+                }
+            } catch (e) {
+                console.error("Failed to merge wasm-bindgen imports:", e);
+            }
+        })();
+
+        load("bg/open-rebellion_bg.wasm");
+    </script>
 </body>
 </html>
