@@ -1,0 +1,941 @@
+/*
+ * Cockpit chrome — overlays the original game's full-screen chrome composite
+ * (strategy/900 Alliance, strategy/901 Empire — preprocessed to chrome/alliance.png
+ * and chrome/empire.png with the blue galaxy hole made transparent).
+ *
+ * The chrome is the 640×481 native game image. We scale to fill the viewport
+ * while preserving its 4:3 aspect; black letterbox/pillarbox elsewhere.
+ *
+ * Coordinates of interactive regions (in chrome native pixels, 640×481):
+ *   Galaxy/content area:  x= 140 –  555, y=  35 – 405   (transparent area)
+ *   Right button column:  x= 585 –  625, y=  80 – 415   (10 stacked cells)
+ *   Left systems column:  x=  20 –  100, y=  60 – 380   (10 stacked cells)
+ *   Top status displays:  x= 290 –  450, y=   8 –  34   (3 indicator slots)
+ *   Top-right indicators: x= 480 –  610, y=   8 –  34   (2 separate slots)
+ *   Bottom-left logo:     x=  20 –  130, y= 415 – 472
+ *   Bottom-center panels: x= 180 –  450, y= 408 – 475   (3 chrome displays)
+ *   Bottom-right panels:  x= 470 –  625, y= 410 – 475   (3 chrome displays)
+ */
+
+.cockpit {
+  position: fixed;
+  inset: 0;
+  /* Chrome PNG is 4:3 (640×481).  Modern viewports are 16:9, so it
+     letterboxes.  Fill the bars with a color matching the chrome's outer
+     edge.  Sampled edge colors:
+       top edge:    RGB (39, 91, 103) — dark teal
+       middle edge: RGB (200, 200, 200) — light silver
+       bottom:      transparent (frame's own bottom gradient handles floor)
+     Use a vertical gradient mirroring this so the chrome seam disappears
+     at any aspect ratio. */
+  background:
+    linear-gradient(180deg,
+      #2a4a55 0%,
+      #4a6a75 8%,
+      #b8babc 30%,
+      #d0d2d4 50%,
+      #b0b2b4 75%,
+      #707274 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cockpit-frame {
+  position: relative;
+  /* Fill the entire viewport — the chrome PNG stretches to fit.
+     1998 was fixed 4:3, but the user wants the web version to adapt to
+     any aspect ratio (16:9, 16:10, ultrawide, portrait) without ugly
+     pillarbox bars. Stretches up to 1.8× horizontally on ultrawide and
+     1.4× vertically in extreme portrait, then locks aspect ratio to
+     avoid grotesque distortion. All interactive elements are
+     positioned in % of the frame so they remain clickable. */
+  width: 100vw;
+  height: 100vh;
+  /* On EXTREME aspect ratios, fall back to letterboxing rather than
+     distorting the chrome PNG beyond recognition. */
+  max-width: calc(100vh * 2.4);    /* don't go wider than 2.4:1 aspect */
+  max-height: calc(100vw * 1.1);   /* don't go taller than 1:1.1 aspect */
+  image-rendering: pixelated;
+  /*
+   * The chrome PNG has transparent regions in the bottom area between the
+   * console groups (where R2-D2 stands) and to the right of the right
+   * console (where C-3PO stands). Fill the frame background with a
+   * chrome-floor silver gradient — the cockpit-monitor sits in front of
+   * the top portion (with the canvas drawing its own starfield), so this
+   * gradient is only visible through the bottom transparent gaps.
+   *
+   * The galaxy canvas paints a dark starfield top-to-bottom so the top
+   * portion's grey is hidden by the canvas; only the bottom 18% (below
+   * the monitor's bottom edge) reveals the floor gradient.
+   */
+  background:
+    linear-gradient(180deg,
+      #02030a 0%,
+      #02030a 80%,
+      #b2b8c0 82%,
+      #c8ccd4 88%,
+      #b8b8b8 95%,
+      #a0a098 100%);
+}
+
+/*
+ * The "monitor" — galaxy / panel / combat content renders here, behind the chrome.
+ * Coordinates match the transparent area of chrome/empire.png exactly.
+ *
+ * IMPORTANT: monitor has TRANSPARENT background so the cockpit-frame's
+ * bottom-gradient floor color can show through the chrome's transparent
+ * gap regions (between bottom-center consoles where R2 stands, and right
+ * of right console where C-3PO stands). The canvas draws its own starfield
+ * background, so this transparency is invisible within the visible monitor.
+ */
+.cockpit-monitor {
+  position: absolute;
+  /* Pixel-measured from alliance.png alpha mask (Pillow scan at y=80..350):
+     transparent area runs x=54..541 horizontally at every middle y.
+     Old CSS used left=21.9% which left an 86-pixel gap on the chrome's
+     left side where chrome bg showed through as a dark void. */
+  left: 8.4%;         /* 54/640  — actual chrome transparent left edge */
+  top: 7.3%;          /* 35/481 */
+  right: 15.5%;       /* (640-541)/640  — actual chrome transparent right edge */
+  bottom: 15.8%;      /* (481-405)/481 */
+  overflow: hidden;
+  background: transparent;
+  /* Subtle scan-line vignette to mirror CRT monitor feel */
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
+}
+
+/* The chrome image overlay — sits on top of the monitor */
+.cockpit-chrome-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+  user-select: none;
+}
+
+/*
+ * Right button column — 10 silver-bar slots in chrome PNG.
+ * Pixel-measured via scripts/measure_chrome2.js (alliance.png alpha mask):
+ *   silver bars run x=543-606 (84.8%-94.7%), 10 bars vertically
+ *   first bar ~y=110 (22.87%), last bar bottom ~y=330 (68.6%)
+ *   The original CSS (95.62%-99.38%) was measuring the chrome's outermost
+ *   decorative edge, not the actual button slots.
+ */
+.cockpit-buttons-right {
+  position: absolute;
+  left: 84.84%;       /* 543/640 — start of silver bars */
+  width: 9.84%;       /* 606-543 = 63px → 63/640 = 9.84% */
+  top: 22.87%;
+  height: 45.74%;
+  display: grid;
+  grid-template-rows: repeat(10, 1fr);
+  z-index: 3;
+  overflow: hidden;
+}
+.cockpit-buttons-right .cockpit-btn {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.cockpit-btn {
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.cockpit-btn:focus { outline: none !important; box-shadow: none !important; }
+.cockpit-btn .btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 9px;
+  font-weight: bold;
+  color: rgba(200, 220, 255, 1);
+  letter-spacing: 0;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 1);
+  transition: all 80ms;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+.cockpit-btn:hover .btn-content {
+  background: rgba(80, 140, 255, 0.18);
+  color: var(--accent-bright);
+  box-shadow: inset 0 0 6px rgba(120, 180, 255, 0.5);
+}
+.cockpit-btn.active .btn-content {
+  background: rgba(200, 160, 60, 0.25);
+  color: var(--accent-bright);
+  box-shadow: inset 0 0 8px rgba(255, 200, 80, 0.7);
+}
+.cockpit-btn img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transition: filter 80ms;
+}
+.cockpit-btn:hover img {
+  filter: brightness(1.4) drop-shadow(0 0 3px rgba(120, 200, 255, 0.9));
+}
+.cockpit-btn.active img {
+  filter: drop-shadow(0 0 5px rgba(255, 200, 80, 0.9)) saturate(1.5);
+}
+
+/*
+ * Bottom chrome panel click hotspots — invisible buttons over the chrome's
+ * baked-in bottom display windows.
+ */
+.cockpit-bottom-hotspot {
+  position: absolute;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  z-index: 3;
+  padding: 0;
+  border-radius: 0;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.cockpit-bottom-hotspot:hover {
+  background: rgba(120, 200, 255, 0.18) !important;
+}
+.cockpit-bottom-hotspot:focus { outline: none !important; box-shadow: none !important; }
+
+/*
+ * Droid advisor overlays — R2-D2 (ALSPRITE.DLL/3331) and C-3PO (ALSPRITE.DLL/2001)
+ * stand on the cockpit chrome's pedestals. Positions match the 1998 game.
+ */
+.cockpit-droid {
+  position: absolute;
+  pointer-events: none;
+  image-rendering: pixelated;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+}
+.cockpit-droid.r2d2 {
+  /* R2-D2 sits at center-bottom between the two chrome panel groups */
+  left: 50.5%;
+  bottom: 0.5%;
+  width: 8.5%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+/*
+ * Floor patches over the chrome's baked-in dark display windows.
+ * The chrome PNG has dark rectangles between the bottom console groups
+ * (center) and to the right of the right console group (where C-3PO stands).
+ * We cover them with chrome-floor gradients so droids stand on continuous floor.
+ *
+ * Widths measured from chrome alliance.png (640×481):
+ *   R2 gap:    x≈300-355 → 47%–55% (8% wide, height 84.2%–100%)
+ *   C-3PO gap: x≈585-630 → 91.5%–98.5% (7% wide, height 80%–100%)
+ */
+/*
+ * R2-D2 stands in the gap between the bottom-center console groups.
+ * Measured precisely from chrome alliance.png (640×481):
+ *   Left console ends at  x=311 (48.6%)
+ *   Right console starts at x=367 (57.3%)
+ *   Gap = 8.7% wide
+ * Pedestal extends upward (top:81%) into the monitor area to cover R2's
+ * upper body where the chrome is transparent and the monitor's dark navy
+ * background would otherwise show through.
+ */
+.cockpit-r2-pedestal {
+  position: absolute;
+  left: 48.5%;
+  width: 8.8%;
+  top: 81%;
+  bottom: 0;
+  z-index: 2; /* above .cockpit-monitor (z:0) and chrome overlay backdrop */
+  /* Matches the chrome's actual floor silver (sampled ~RGB 170-190 from the
+     rendered alliance.png at y≈1240 in a 1320-tall viewport). */
+  background:
+    linear-gradient(180deg,
+      #a2a8b0 0%,
+      #b8bcc4 25%,
+      #c8ccd0 55%,
+      #b8b8b8 85%,
+      #a0a098 100%);
+  pointer-events: none;
+}
+/*
+ * C-3PO stands in the gap between the right console group and the right
+ * chrome rail (x=500-607 px = 78.1%-94.8%). Pedestal extends upward to
+ * top:79% to cover his taller sprite. Subtle red tint at bottom hints at
+ * the Alliance logo area to his left.
+ */
+.cockpit-c3po-pedestal {
+  position: absolute;
+  left: 89.5%;
+  width: 9%;
+  top: 79%;
+  bottom: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg,
+      #a2a8b0 0%,
+      #b8bcc4 25%,
+      #c8ccd0 55%,
+      #b8b8b8 80%,
+      /* hint of alliance-logo red at very bottom */
+      #b09080 95%,
+      #a48070 100%);
+  pointer-events: none;
+}
+.cockpit-droid.c3po {
+  /* C-3PO stands on the red Alliance pedestal at bottom-right */
+  right: 1.5%;
+  bottom: 0.5%;
+  width: 7.5%;
+}
+
+/*
+ * Top status bar values — render live game numbers inside the chrome's
+ * pre-rendered icon slots.
+ */
+/*
+ * Top status bar values — positioned to land inside each of the chrome's
+ * pre-rendered icon slots in the 640×481 top bar. Slot positions (% of chrome):
+ *   Slot A:  15.9%–25.5% (popularity display, leftmost)
+ *   Slot B:  37.3%–51.6% (tank icon — ground forces / score)
+ *   Slot C:  52.2%–66.4% (ship icon — fleet count)
+ *   Slot D:  67.0%–81.7% (wrench icon — manufacturing / build count)
+ *   Slot E:  ~88%–99%    (day counter, top-right)
+ */
+.cockpit-stat {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #e8c060;
+  text-align: right;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 1);
+  pointer-events: none;
+  z-index: 4;
+  top: 1.5%;
+  height: 5.5%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+.cockpit-stat.stat-pop  { left: 15.9%; width: 9.6%; padding-right: 4px; }
+.cockpit-stat.stat-tank { left: 37.3%; width: 14.3%; }
+.cockpit-stat.stat-ship { left: 52.2%; width: 14.2%; }
+.cockpit-stat.stat-wrench { left: 67.0%; width: 14.7%; }
+.cockpit-stat.stat-day {
+  left: 87%; width: 7%;
+  color: #ff8050;
+  font-weight: bold;
+  justify-content: center;
+}
+
+/* Speed indicator dots in the far top-right (chrome has a strip with slots) */
+.cockpit-speed-indicators {
+  position: absolute;
+  top: 1.5%;
+  left: 95%;
+  width: 4.5%;
+  height: 5.5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: auto;
+}
+.cockpit-speed-indicators button {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 200, 80, 0.3);
+  color: #c89030;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.cockpit-speed-indicators button.active {
+  background: #c89030;
+  color: #000;
+  border-color: #ffd770;
+}
+
+/*
+ * Bottom-left chrome mini-monitor — shows selected system info or galaxy
+ * overview. Aligned with the chrome's baked mini-display window (the small
+ * monitor below the system list, at y≈365-405 of 481).
+ */
+.cockpit-mini-monitor {
+  position: absolute;
+  /* Aligned to the chrome's actual baked mini-display window (the small
+     screen with the blue planet icon).  Measured directly from the chrome
+     PNG: window interior is x=12-48 (1.9%–7.5%), y=358-395 (74.4%–82.1%).
+     We pad a hair inside so the text doesn't kiss the bezel. */
+  left: 1.9%;
+  width: 5.6%;
+  top: 74.4%;
+  height: 7.7%;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 3px;
+  color: #a0c0e0;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  line-height: 1.1;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 1);
+  overflow: hidden;
+}
+.cockpit-mini-monitor .mm-title {
+  font-size: 8px;
+  color: #ffd770;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1px;
+}
+.cockpit-mini-monitor .mm-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  line-height: 1.2;
+}
+.cockpit-mini-monitor .mm-row .mm-label { color: rgba(160, 192, 224, 0.7); }
+.cockpit-mini-monitor .mm-row .mm-value { color: #ffffff; }
+.cockpit-mini-monitor .mm-bar {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(120, 200, 255, 0.3);
+  margin-top: 2px;
+  position: relative;
+}
+.cockpit-mini-monitor .mm-bar .mm-bar-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #4a90c0, #80c0ff);
+}
+.cockpit-bottom-hotspot .hotspot-tooltip {
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--accent-bright);
+  padding: 2px 6px;
+  font-size: 9px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 80ms;
+}
+.cockpit-bottom-hotspot:hover .hotspot-tooltip {
+  opacity: 1;
+}
+
+/*
+ * Left systems column — 10 cells aligned EXACTLY with the chrome's baked
+ * dark slots (verified by pixel-walking alliance.png at native 640×481):
+ *   x: 4-28   (0.6%–4.4%)  → left=0.6%, width=3.75%
+ *   y: 110-373 (22.9%–77.5%) → 10 cells stacked, ~5.5% pitch each
+ */
+.cockpit-systems-left {
+  position: absolute;
+  left: 0.6%;
+  width: 3.75%;
+  top: 22.9%;
+  height: 54.7%;
+  display: grid;
+  grid-template-rows: repeat(10, 1fr);
+  gap: 1px;
+  z-index: 3;
+}
+
+.cockpit-system-cell {
+  background: transparent !important;
+  border: none !important;
+  padding: 1px 3px;
+  cursor: pointer;
+  color: rgba(220, 230, 255, 0.95);
+  text-align: center;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+  outline: none !important;
+  box-shadow: none !important;
+  position: relative;
+}
+.cockpit-system-cell:focus { outline: none !important; }
+.cockpit-system-cell:hover {
+  background: rgba(120, 180, 255, 0.18);
+  color: #ffffff;
+}
+.cockpit-system-cell.active {
+  background: rgba(255, 200, 80, 0.22);
+  color: var(--accent-bright);
+}
+.cockpit-system-cell .sys-planet {
+  width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+  /* slide_04 left-rail cells appear darker / blue-shifted vs my originally
+     bright modern-photo planets. Apply a slight blue tint + dim so the
+     thumbnails feel embedded in the dark chrome instead of popping out. */
+  filter: brightness(0.85) saturate(0.85) hue-rotate(-8deg);
+}
+.cockpit-system-cell .sys-name {
+  display: none;  /* planet sprite replaces the label in left rail */
+}
+/* Faction color stripe on the left edge instead of the awkward "A11" text */
+.cockpit-system-cell .sys-meta {
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 2px;
+  background: var(--cell-faction, transparent);
+  font-size: 0;
+  opacity: 0.95;
+}
+
+/*
+ * Top status overlays (credits/materials/support displays).
+ * The 3 panels at x=290–450 already have icons baked in; we overlay numbers.
+ */
+.cockpit-top-status {
+  position: absolute;
+  top: 1.6%;
+  left: 45.3%;
+  width: 25%;
+  height: 5.5%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  z-index: 4;
+  padding: 0 4px;
+  pointer-events: none;
+}
+.cockpit-top-status .stat-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-bright);
+  text-align: right;
+  padding-right: 6px;
+}
+
+/*
+ * Top-right speed/day overlay
+ */
+.cockpit-top-right {
+  position: absolute;
+  top: 1.6%;
+  left: 75%;
+  width: 20.3%;
+  height: 5.5%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  z-index: 4;
+  padding: 0 6px;
+  pointer-events: auto;
+}
+.cockpit-top-right .day-display {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-bright);
+  text-align: center;
+}
+.cockpit-top-right .day-display .day-label {
+  font-size: 7px;
+  display: block;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+.cockpit-top-right .speed-display {
+  display: flex;
+  gap: 1px;
+  justify-content: center;
+}
+.cockpit-top-right .speed-display button {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(120, 180, 255, 0.3);
+  color: rgba(180, 200, 255, 0.85);
+  font-size: 9px;
+  padding: 1px 3px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  min-width: 16px;
+}
+.cockpit-top-right .speed-display button.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+/*
+ * The bottom decorative panels (planet/ship/character display windows) overlay
+ * little icon thumbnails in their dark display windows.
+ * Native coords: bottom-center panels x=180-450, y=408-475
+ *               bottom-right panels x=470-625, y=410-475
+ */
+.cockpit-bottom-displays {
+  position: absolute;
+  left: 28.1%;
+  width: 50%;
+  bottom: 1.5%;
+  height: 13%;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  z-index: 3;
+  pointer-events: none;
+}
+.cockpit-bottom-displays .display-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.9);
+}
+
+/*
+ * SECTOR ZOOM POPUP — the iconic 1998 panel showing all systems in a sector
+ * with round planet sprites, faction-colored names, and red/green support bars.
+ * Overlays the LEFT half of the galaxy monitor (matching the 1998 reference).
+ */
+.sector-zoom-popup {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 38%;
+  max-height: calc(100% - 24px);
+  z-index: 6;
+  pointer-events: auto;
+  background: rgba(36, 40, 52, 0.94);
+}
+/* Multi-sector zoom (slide 15) — when 2 sectors are open, the SECOND
+   popup positions itself on the right half of the monitor. */
+.sector-zoom-popup--secondary {
+  left: auto;
+  right: 12px;
+  border: 1px solid #b0b8c0;
+  box-shadow:
+    0 0 0 1px #404858,
+    0 6px 20px rgba(0, 0, 0, 0.7),
+    inset 0 0 18px rgba(0, 0, 0, 0.5);
+  color: #e0e8f0;
+  font-family: var(--font-mono);
+  display: flex;
+  flex-direction: column;
+  animation: szp-pop 140ms ease-out;
+}
+@keyframes szp-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.sector-zoom-popup .szp-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  background: linear-gradient(180deg, #4a5260 0%, #2c323c 100%);
+  border-bottom: 1px solid #1c2028;
+  font-size: 11px;
+}
+.sector-zoom-popup .szp-title {
+  flex: 1;
+  color: #ffd770;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: capitalize;
+}
+.sector-zoom-popup .szp-subtitle {
+  color: #dc5f3a;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sector-zoom-popup .szp-resize,
+.sector-zoom-popup .szp-close {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #707888;
+  color: #c0c8d4;
+  width: 16px; height: 16px;
+  padding: 0;
+  font-size: 11px;
+  cursor: pointer;
+  line-height: 1;
+  font-family: var(--font-mono);
+}
+.sector-zoom-popup .szp-close:hover {
+  background: rgba(220, 80, 80, 0.5);
+  color: #fff;
+}
+.sector-zoom-popup .szp-resize:hover {
+  background: rgba(120, 180, 255, 0.3);
+}
+.sector-zoom-popup .szp-body {
+  padding: 6px 8px;
+  /* slide_04 reference: SINGLE column of planet rows. Earlier 2-column grid
+     was my own 'flare' — original game lays planets vertically. */
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+.sector-zoom-popup .szp-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 30px 10px;
+  color: rgba(200, 220, 240, 0.6);
+  font-size: 11px;
+}
+.sector-zoom-popup .szp-planet {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 5px;
+  align-items: center;
+  padding: 3px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  outline: none;
+}
+.sector-zoom-popup .szp-planet:hover {
+  border-color: rgba(120, 200, 255, 0.4);
+  background: rgba(40, 80, 120, 0.25);
+}
+.sector-zoom-popup .szp-planet.selected {
+  border-color: #ffd770;
+  background: rgba(80, 60, 20, 0.3);
+  box-shadow: inset 0 0 6px rgba(255, 200, 80, 0.4);
+}
+.sector-zoom-popup .szp-planet-sprite {
+  width: 37px; height: 37px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+.sector-zoom-popup .szp-planet-info {
+  min-width: 0;
+}
+.sector-zoom-popup .szp-planet-name {
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 1);
+}
+.sector-zoom-popup .szp-bars {
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.sector-zoom-popup .szp-bar {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(80, 90, 105, 0.6);
+}
+.sector-zoom-popup .szp-bar-fill {
+  height: 100%;
+  transition: width 200ms ease-out;
+}
+.sector-zoom-popup .szp-bar-fill.all { background: #4ca44a; box-shadow: 0 0 3px rgba(76,164,74,0.6); }
+.sector-zoom-popup .szp-bar-fill.emp { background: #dc5f3a; box-shadow: 0 0 3px rgba(220,95,58,0.6); }
+.sector-zoom-popup .szp-planet-crest {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  width: 9px; height: 9px;
+  pointer-events: none;
+}
+.sector-zoom-popup .szp-planet-crest.crest-alliance {
+  background: #c44030;
+  clip-path: polygon(50% 0, 100% 28%, 80% 100%, 50% 78%, 20% 100%, 0 28%);
+  box-shadow: 0 0 3px rgba(220, 80, 60, 0.7);
+}
+.sector-zoom-popup .szp-planet-crest.crest-empire {
+  background: #303030;
+  clip-path: polygon(50% 0, 100% 30%, 85% 70%, 100% 100%, 50% 80%, 0 100%, 15% 70%, 0 30%);
+  box-shadow: 0 0 3px rgba(120, 120, 120, 0.6);
+}
+
+/*
+ * Floating System Detail Card — appears in the galaxy monitor's upper-right
+ * when a system is selected. Overlays the galaxy view without blocking the map.
+ */
+.system-detail-card {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 38%;
+  max-height: calc(100% - 24px);
+  z-index: 7;
+  pointer-events: auto;
+  /* slide_06 reference: plain dark panel, NOT blue-glow. The earlier
+     blue-gradient + glow shadow was my added flare. */
+  background: rgba(20, 26, 38, 0.96);
+  border: 1px solid #808080;
+  color: #c0c8d0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.35;
+  animation: sdc-slide-in 160ms ease-out;
+  overflow-y: auto;
+  padding: 8px;
+}
+/* When the multi-sector zoom is open (the secondary sector occupies the
+   right side), the detail card hides — we don't want it overlapping. */
+.sector-zoom-popup--secondary ~ .system-detail-card,
+.system-detail-card--hidden { display: none; }
+@keyframes sdc-slide-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* slide_06: thin dark titlebar with green system name + small X. No
+   gradient, no glow — flat 1998 styling. */
+.system-detail-card .sdc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 2px 8px;
+  background: #0a0a14;
+  border-bottom: 1px solid #404040;
+}
+.system-detail-card .sdc-name {
+  font-size: 12px;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  color: #80ff80;
+  font-family: 'Tahoma', sans-serif;
+}
+.system-detail-card .sdc-close {
+  background: #c0c0c0;
+  border: 1px solid #404040;
+  color: #000;
+  font-size: 11px;
+  width: 16px; height: 14px;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  font-family: 'Tahoma', sans-serif;
+}
+.system-detail-card .sdc-close:hover {
+  background: #d8d8d8;
+}
+
+/* slide_06: a single highlighted "Personnel" tab below the title bar. */
+.system-detail-card .sdc-tabs {
+  display: flex;
+  background: #1a1a1a;
+  border-bottom: 1px solid #404040;
+  padding: 2px 6px 0;
+  gap: 4px;
+}
+.system-detail-card .sdc-tab {
+  padding: 3px 16px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #707070;
+  border: 1px solid transparent;
+}
+.system-detail-card .sdc-tab--active {
+  color: #80ff80;
+  background: #0a0a14;
+  border-color: #404040 #404040 transparent #404040;
+  border-radius: 0;
+}
+
+/* slide_06: 2-column grid of square portrait + caption. Background of
+   the body stays dark — slide shows planet imagery there but we use
+   the same flat dark panel as the rest of the card so it doesn't
+   diverge from the rest of our 1998-faithful chrome. */
+.system-detail-card .sdc-personnel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.system-detail-card .sdc-person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.system-detail-card .sdc-person-portrait {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid #808080;
+  background: #000;
+}
+.system-detail-card .sdc-person-name {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 10px;
+  text-align: center;
+  color: #ffffff;
+  line-height: 1.15;
+  max-width: 100%;
+}
+.system-detail-card .sdc-empty {
+  padding: 16px;
+  text-align: center;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  color: #808080;
+}
+
+/*
+ * Viewport-content (galaxy, panels, etc.) loading splash.
+ */
+.viewport-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  background: radial-gradient(ellipse at center, #0c1224 0%, #02030a 100%);
+}
+.viewport-loading h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 4px;
+  color: var(--accent);
+}
+.viewport-loading .pulse {
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scaleX(0.5); }
+  50% { opacity: 1; transform: scaleX(1); }
+}
