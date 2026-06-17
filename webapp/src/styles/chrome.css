@@ -790,29 +790,19 @@
   outline: none;
   min-height: 0;
 }
-/* LOYALTY BAR — single bar split green (Alliance) + red (Empire) +
-   grey neutral remainder. Width matches planet sprite. */
-.sector-zoom-popup .szp-loyalty {
-  display: flex;
-  width: 42px;
-  height: 4px;
-  background: #404040;
-  border: 1px solid #1a1a1a;
-}
-.sector-zoom-popup .szp-loyalty-green { background: #30c030; }
-.sector-zoom-popup .szp-loyalty-red   { background: #d04040; }
-/* PRODUCTION QUEUE — row of 3 small slot indicators. */
-.sector-zoom-popup .szp-prodqueue {
+/* STATUS BAR — single 5-segment bar matching the Yaga Minor close-up
+   reference. Segments shift green (alliance) → yellow (contested) →
+   red (empire) along the bar. Grey indicates empty/neutral. */
+.sector-zoom-popup .szp-statusbar {
   display: flex;
   gap: 1px;
   width: 42px;
   height: 4px;
-  margin-top: 1px;
+  border: 1px solid #1a1a1a;
 }
-.sector-zoom-popup .szp-prod-slot {
+.sector-zoom-popup .szp-status-seg {
   flex: 1;
   background: #404040;
-  border: 1px solid rgba(0, 0, 0, 0.6);
 }
 
 /* slide_04 close-up: small T-shaped flag pole above the planet photo.

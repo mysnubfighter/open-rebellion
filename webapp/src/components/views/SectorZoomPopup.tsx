@@ -76,53 +76,43 @@ function hash32(x: number): number {
 }
 
 /**
- * LoyaltyBar — the original game's single bar showing each planet's
- * popularity split between Alliance (green) and Empire (red).
- * Width is proportional to popularity_alliance + popularity_empire;
- * any unaligned remainder is shown as neutral grey.
+ * StatusBar — the original 1998 game's single status bar above each
+ * planet entry. Renders as 5 segments with the leftmost reflecting
+ * Alliance loyalty (green), the rightmost Empire loyalty (red), and
+ * the middle segments transitioning yellow (contested) — matching
+ * the Yaga Minor close-up reference.
  *
- * REBEXE source: UIPanel_UpdateLoyaltySlider @ 0x0045c450.
+ * REBEXE source:
+ *   UIPanel_UpdateLoyaltySlider @ 0x0045c450
+ *   ManuMgr_UpdateProduction    @ 0x0053b330
  */
-function LoyaltyBar({ alliance, empire }: { alliance: number; empire: number }) {
+function StatusBar({ alliance, empire, seed }: {
+  alliance: number; empire: number; seed: number;
+}) {
   const a = Math.max(0, Math.min(1, alliance));
   const e = Math.max(0, Math.min(1, empire));
-  const total = a + e;
-  const greenPct = total > 0 ? (a / Math.max(total, 1)) * 100 : 0;
-  const redPct = total > 0 ? (e / Math.max(total, 1)) * 100 : 0;
-  return (
-    <div className="szp-loyalty">
-      <span className="szp-loyalty-green" style={{ width: `${greenPct}%` }} />
-      <span className="szp-loyalty-red" style={{ width: `${redPct}%` }} />
-    </div>
-  );
-}
-
-/**
- * ProductionQueue — row of 3 small slot indicators showing what's
- * being built at this system's manufacturing facility. Color encodes
- * the item type. Empty slots are dimmed grey.
- *
- * REBEXE source: ManuMgr_UpdateProduction @ 0x0053b330.
- *
- * Until the engine bridge exposes real production queues, the slots
- * are deterministically derived from the system id so each planet
- * has a stable, distinct appearance.
- */
-function ProductionQueue({ seed }: { seed: number }) {
-  const colors = ['#404040', '#80c0ff', '#ffd040', '#40d040', '#ff8040'];
-  // Slot count: 3 fixed (matches close-up of original sector entry)
-  const slots = Array.from({ length: 3 }, (_, i) => {
-    const v = hash32(seed * 41 + i * 53) % 100;
-    if (v < 40) return colors[0];           // empty (most planets idle)
-    if (v < 60) return colors[1];           // capital ship (blue)
-    if (v < 75) return colors[2];           // fighter (yellow)
-    if (v < 90) return colors[3];           // troop (green)
-    return colors[4];                       // facility (orange)
+  // 5-segment scale. Segment i represents threshold i/5 along the
+  // alliance→empire axis. Alliance "dominant" colors green; transition
+  // yellow; empire red. Unaligned/empty segments stay grey.
+  const segments = Array.from({ length: 5 }, (_, i) => {
+    // Segment center on the [0..1] axis (Alliance=0, Empire=1).
+    const t = (i + 0.5) / 5;
+    // Per-segment hash adds slight variation per system so two planets
+    // with identical popularity don't render identically.
+    const noise = (hash32(seed * 11 + i * 23) % 20) / 100; // ±0.1
+    const aw = a - t + 0.2 + noise;   // alliance weight at this segment
+    const ew = e - (1 - t) + 0.2 + noise; // empire weight at this segment
+    if (aw > 0.25 && aw > ew) return '#30c030';     // green - alliance dominant
+    if (ew > 0.25 && ew > aw) return '#d04040';     // red - empire dominant
+    if (Math.abs(aw - ew) < 0.15 && (aw > 0 || ew > 0)) {
+      return '#e0c020';                              // yellow - contested
+    }
+    return '#404040';                                // grey - neutral/empty
   });
   return (
-    <div className="szp-prodqueue">
-      {slots.map((c, i) => (
-        <span key={i} className="szp-prod-slot" style={{ background: c }} />
+    <div className="szp-statusbar">
+      {segments.map((c, i) => (
+        <span key={i} className="szp-status-seg" style={{ background: c }} />
       ))}
     </div>
   );
@@ -151,11 +141,11 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
       title={`${s.name} — ${s.control}`}
     >
       <span className={`szp-flag crest-${crest}`} />
-      <LoyaltyBar
+      <StatusBar
         alliance={s.popularityAlliance}
         empire={s.popularityEmpire}
+        seed={s.id}
       />
-      <ProductionQueue seed={s.id} />
       <img
         className="szp-planet-sprite"
         src={`/assets/sprites/strategy/${spriteId}.png`}
