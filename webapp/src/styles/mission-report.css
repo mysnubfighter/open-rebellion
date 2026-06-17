@@ -69,21 +69,41 @@
 .mission-report-modal__close:hover { background: rgba(255, 255, 255, 0.2); }
 .mission-report-modal__close:hover { color: #ff8080; }
 
-/* slide_11: large scene image fills top ~66% of body. Black text panel
-   takes the bottom ~33%. The scene is a SPRITE from STRATEGY.DLL / EData/
-   showing the mission's setting + character portraits composited together.
-   Until that BMP is wired, render a starfield-gradient placeholder. */
+/* slide_11/13/23: large scene fills top ~66% of body. Each mission
+   category gets a distinct gradient palette until the real BMPs are
+   wired from STRATEGY.DLL/EData. */
 .mission-report-modal__backdrop {
   flex: 1 1 66%;
   min-height: 0;
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(40, 60, 100, 0.4), transparent 60%),
-    radial-gradient(ellipse at 70% 60%, rgba(80, 40, 30, 0.3), transparent 60%),
-    #050810;
   background-size: cover;
   background-position: center;
   position: relative;
   overflow: hidden;
+}
+.mission-report-modal__backdrop.scene-espionage {
+  background:
+    radial-gradient(ellipse at 25% 35%, rgba(60, 80, 120, 0.5), transparent 55%),
+    radial-gradient(ellipse at 75% 65%, rgba(40, 60, 90, 0.4), transparent 55%),
+    linear-gradient(135deg, #0a1020, #1a2540);
+}
+.mission-report-modal__backdrop.scene-uprising {
+  background:
+    radial-gradient(ellipse at 50% 70%, rgba(180, 80, 40, 0.3), transparent 60%),
+    linear-gradient(180deg, #2a1a10, #1a1008);
+}
+.mission-report-modal__backdrop.scene-battle {
+  background:
+    radial-gradient(ellipse at 30% 40%, rgba(220, 80, 60, 0.4), transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(80, 140, 220, 0.4), transparent 50%),
+    #050810;
+}
+.mission-report-modal__backdrop.scene-diplomacy {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(80, 120, 80, 0.4), transparent 60%),
+    linear-gradient(180deg, #102018, #051008);
+}
+.mission-report-modal__backdrop.scene-default {
+  background: #050810;
 }
 
 .mission-report-modal__portrait {

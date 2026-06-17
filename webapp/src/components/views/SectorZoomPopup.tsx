@@ -28,7 +28,38 @@ const PLANET_SPRITE_IDS = [
   10230, 10231, 10232, 10233, 10234, 10237, 10238, 10239, 10240,
 ];
 
-function planetSpriteFor(systemId: number): number {
+// Canonical planet→sprite assignments. Iconic planets get their
+// visual identity; everything else falls back to a deterministic
+// hash so reloads stay stable. Sprite IDs from STRATEGY.DLL 10212-40.
+const CANONICAL_PLANET_SPRITES: Record<string, number> = {
+  Coruscant:    10212,
+  Hoth:         10219,
+  Tatooine:     10224,
+  Yavin:        10222,
+  Endor:        10227,
+  Naboo:        10215,
+  'Mon Calamari': 10221,
+  Bespin:       10216,
+  Dagobah:      10229,
+  Kashyyyk:     10222,
+  Sullust:      10230,
+  Bothawui:     10231,
+  Alderaan:     10215,
+  Corellia:     10214,
+  Kuat:         10217,
+  Geonosis:     10224,
+  Mustafar:     10228,
+  Ilum:         10219,
+  Felucia:      10227,
+  Ryloth:       10223,
+  Dantooine:    10226,
+  Mygeeto:      10219,
+  Korriban:     10228,
+};
+
+function planetSpriteFor(systemName: string, systemId: number): number {
+  const canonical = CANONICAL_PLANET_SPRITES[systemName];
+  if (canonical) return canonical;
   return PLANET_SPRITE_IDS[systemId % PLANET_SPRITE_IDS.length];
 }
 
@@ -45,7 +76,7 @@ interface CellProps {
 }
 
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
-  const spriteId = planetSpriteFor(s.id);
+  const spriteId = planetSpriteFor(s.name, s.id);
   const allP = Math.round(s.popularityAlliance * 100);
   const empP = Math.round(s.popularityEmpire * 100);
   // slide_04 reference: small flag/crest above support bar, then large

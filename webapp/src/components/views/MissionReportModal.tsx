@@ -42,10 +42,19 @@ export function MissionReportModal({ report, onClose }: Props) {
     report.outcomeColor === 'failure' ? '#dc5050' :
     '#c0c0c0';
 
-  // Pick a backdrop: cutscene fallback or color
+  // slide_11/13/23: scene backdrop comes from STRATEGY.DLL or
+  // EData (cinematic composites). Until those are extracted, use a
+  // category-keyed gradient as placeholder.
   const backdropUrl = report.backdropId
-    ? `/assets/sprites/encyclopedia/${report.backdropId}`
+    ? `/assets/sprites/scenes/${report.backdropId}`
     : null;
+  // Add a CSS class for category-specific gradient placeholder.
+  const titleLower = report.title.toLowerCase();
+  const sceneClass = titleLower.includes('battle') ? 'scene-battle'
+    : titleLower.includes('uprising') ? 'scene-uprising'
+    : titleLower.includes('espionage') ? 'scene-espionage'
+    : titleLower.includes('diplomacy') || titleLower.includes('diplomatic') ? 'scene-diplomacy'
+    : 'scene-default';
 
   return (
     <div className="mission-report-modal" onClick={onClose}>
@@ -61,7 +70,7 @@ export function MissionReportModal({ report, onClose }: Props) {
           </div>
         </div>
         <div
-          className="mission-report-modal__backdrop"
+          className={`mission-report-modal__backdrop ${sceneClass}`}
           style={backdropUrl ? { backgroundImage: `url(${backdropUrl})` } : undefined}
         >
           {report.characterPortraitId != null && (

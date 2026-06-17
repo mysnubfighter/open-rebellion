@@ -25,6 +25,13 @@ interface Props {
   onSelectSystem: (id: number | null) => void;
   viewMode?: GalaxyViewMode;
   onContextMenuOnSystem?: (systemId: number, screenX: number, screenY: number) => void;
+  /** When true, draw sector name labels at cluster centroids. Default
+   *  off because slide_01/02 reference does not show these — sector
+   *  names appear only inside the sector zoom popup. */
+  showSectorLabels?: boolean;
+  /** When true, render markers smaller and skip labels for the mini
+   *  galaxy view alongside an open sector zoom popup (slide_04). */
+  compressed?: boolean;
 }
 
 interface Camera { x: number; y: number; zoom: number; }
@@ -91,6 +98,7 @@ function generateStars(width: number, height: number, count: number) {
 export function GalaxyMapView({
   world: _world, systems, missions, fleets = [], selectedSystemId, onSelectSystem,
   viewMode = 'control', onContextMenuOnSystem,
+  showSectorLabels = false, compressed = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -228,13 +236,11 @@ export function GalaxyMapView({
     ctx.translate(camera.x, camera.y);
     ctx.scale(camera.zoom, camera.zoom);
 
-    // Sector NAME labels — slide_02/04 of the 1998 reference show the
-    // sector name floating in green text near the cluster centroid (the
-    // sector zoom popup names it explicitly: "Sesswenna", etc.). Compute
-    // each sector's centroid from its member system positions and draw
-    // the name above the centroid. No boundary polygons (1998 doesn't
-    // draw them either).
-    {
+    // Optional sector name labels — slide_01/02 reference does NOT show
+    // floating sector names on the galaxy view (sector names appear only
+    // inside the sector zoom popup). Gated behind showSectorLabels so the
+    // default galaxy view stays clean.
+    if (showSectorLabels) {
       type Acc = { sx: number; sy: number; minY: number; count: number };
       const byS = new Map<number, Acc>();
       for (const s of systems) {
@@ -252,8 +258,6 @@ export function GalaxyMapView({
       for (const [sid, a] of byS) {
         if (a.count < 2) continue;
         const cx = a.sx / a.count;
-        // Place the label above the topmost system in this sector, with
-        // a small zoom-aware gap so it doesn't collide with the sparkle.
         const cy = a.minY - 14 / camera.zoom;
         const label = SECTOR_NAMES[sid] ?? `Sector ${sid}`;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
@@ -262,6 +266,8 @@ export function GalaxyMapView({
         ctx.fillText(label, cx, cy);
       }
     }
+    // Suppress unused warning when labels are off
+    void SECTOR_NAMES;
 
     // Mission destination markers
     for (const m of missions) {
@@ -366,8 +372,11 @@ export function GalaxyMapView({
         // 15×15 native size.  Default/Uncontrolled systems use sprite 10157
         // (big 8-pointed sparkle) which deserves more prominence to match
         // the 1998 reference's bright sparkle effect — render those at 1.8×
-        // while keeping other markers at 1.4×.
-        const scale = spriteId === 10157 ? 1.8 : 1.4;
+        // while keeping other markers at 1.4×. In compressed mode (sector
+        // zoom open), halve the marker scale so the right-half mini galaxy
+        // matches slide_04's smaller sparkles.
+        const scaleBase = spriteId === 10157 ? 1.8 : 1.4;
+        const scale = compressed ? scaleBase * 0.6 : scaleBase;
         const size = (sprite.naturalWidth * scale) / camera.zoom;
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, p.x - size/2, p.y - size/2, size, size);
@@ -450,11 +459,10 @@ export function GalaxyMapView({
         ctx.stroke();
       }
 
-      // System name label — 1998 reference shows labels ONLY on hovered or
-      // selected systems, not on every star.  Show at any zoom for those two
-      // cases; otherwise show all labels only when the player has zoomed in
-      // past 1.8× (intent: detail-on-demand).
-      if (isSelected || isHover || camera.zoom > 1.8) {
+      // slide_01/02 reference: labels appear ONLY on hovered or selected
+      // systems. The earlier `zoom > 1.8` fallback caused every name to
+      // show at large viewports, cluttering the galaxy.
+      if (isSelected || isHover) {
         const fontSize = 9;
         ctx.font = `${fontSize}px "Liberation Sans", sans-serif`;
         ctx.textAlign = 'center';
@@ -540,7 +548,7 @@ export function GalaxyMapView({
     }
 
     ctx.restore();
-  }, [systems, missions, selectedSystemId, hoverSystemId, camera, canvasSize, redrawTick]);
+  }, [systems, missions, selectedSystemId, hoverSystemId, camera, canvasSize, redrawTick, viewMode, fleets, showSectorLabels, compressed]);
 
   // Resize handler — also uses ResizeObserver to catch the container being
   // measured AFTER mount (which is when cockpit-monitor flex layout settles).
@@ -638,12 +646,14 @@ export function GalaxyMapView({
     });
   };
 
-  // Overlay title text matches original game's view-mode header
+  // slide_02 reference: GREEN centered header "Popular Support" in
+  // Tahoma case, NOT red uppercase. Other view modes follow the same
+  // green-on-dark pattern.
   const viewTitle = ({
     control: '',
-    popularity: 'POPULAR SUPPORT',
-    missions: 'ACTIVE MISSIONS',
-    fleets: 'FLEET POSITIONS',
+    popularity: 'Popular Support',
+    missions: 'Active Missions',
+    fleets: 'Fleet Positions',
   })[viewMode];
 
   return (
@@ -651,12 +661,13 @@ export function GalaxyMapView({
       {viewTitle && (
         <div style={{
           position: 'absolute',
-          top: 8, left: '50%', transform: 'translateX(-50%)',
-          color: '#dc5050',
-          fontFamily: 'var(--font-display)',
+          top: 2, left: '50%', transform: 'translateX(-50%)',
+          color: '#80ff80',
+          fontFamily: 'Tahoma, sans-serif',
           fontSize: 14,
-          letterSpacing: 3,
-          textShadow: '0 0 4px rgba(0,0,0,1)',
+          fontWeight: 'normal',
+          letterSpacing: 0.5,
+          textShadow: '0 0 3px rgba(0,0,0,1), 0 0 2px rgba(0,0,0,1)',
           pointerEvents: 'none',
           zIndex: 5,
         }}>{viewTitle}</div>

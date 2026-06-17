@@ -171,14 +171,34 @@ export function App() {
           ],
         });
       }
-      // Dev keystroke 'r': fire a sample mission report so we can verify
-      // the modal renders. Remove when engine event wiring lands.
-      if (e.key === 'r') {
+      // Dev keystrokes:
+      //  r — espionage report (slide_11)
+      //  R — incite-uprising failed report (slide_13)
+      //  b — battle outcome report (slide_23)
+      if (e.key === 'r' && !e.shiftKey) {
         setReportQueue((q) => [...q, {
           id: Date.now(),
           title: 'Espionage Mission Report',
           outcomeText: 'The espionage mission to Balfron was successful.',
           bodyText: 'In addition, information was provided on the following systems:\n  - Byss\n\nPersonnel are returning to Tangrene.',
+          outcomeColor: 'success',
+        }]);
+      }
+      if (e.key === 'R' && e.shiftKey) {
+        setReportQueue((q) => [...q, {
+          id: Date.now(),
+          title: 'Incite Uprising Mission Foiled',
+          outcomeText: 'The Incite Uprising mission to Kamparas has been foiled by opposing forces.',
+          bodyText: 'Personnel are returning to Pantolomin.',
+          outcomeColor: 'failure',
+        }]);
+      }
+      if (e.key === 'b') {
+        setReportQueue((q) => [...q, {
+          id: Date.now(),
+          title: 'Battle at Xyquine',
+          outcomeText: 'The Imperial fleet is victorious.',
+          bodyText: 'Xyquine has been successfully defended from Alliance forces. The Alliance fleet has withdrawn.',
           outcomeColor: 'success',
         }]);
       }
@@ -306,10 +326,12 @@ export function App() {
           onSelectSystem={setSelectedSystemId}
           viewMode={galaxyView}
           onContextMenuOnSystem={(sid, x, y) => {
-            // Don't change selectedSystemId — that triggers the sector
-            // zoom popup which is a separate gesture from right-click.
             setCtxMenu({ x, y, systemId: sid });
           }}
+          /* slide_04 reference: when a sector zoom popup is open, the
+             galaxy underneath becomes a mini compressed view in the
+             remaining right half. */
+          compressed={selectedSystemId != null && !zoomPopupClosed}
         />
         {/* View-mode picker — 1998 didn't ship a persistent pill; press `V` to
             reveal it.  Hidden by default to match the reference cockpit. */}

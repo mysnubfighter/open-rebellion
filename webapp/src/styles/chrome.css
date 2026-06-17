@@ -650,11 +650,16 @@
   flex-direction: column;
   animation: szp-pop 140ms ease-out;
 }
+/* slide_15: 2px bezel-style divider between the two sector zooms */
 .sector-zoom-popup--secondary {
   left: auto;
   right: 0;
   border-right: none;
-  border-left: 1px solid #404858;
+  border-left: 2px solid #6a7280;
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.4);
+}
+.sector-zoom-popup:not(.sector-zoom-popup--secondary):has(~ .sector-zoom-popup--secondary) {
+  border-right: 2px solid #6a7280;
 }
 @keyframes szp-pop {
   from { opacity: 0; transform: scale(0.96); }
@@ -807,29 +812,57 @@
  * Floating System Detail Card — appears in the galaxy monitor's upper-right
  * when a system is selected. Overlays the galaxy view without blocking the map.
  */
+/* slide_06 measurement: detail card occupies the RIGHT HALF of the
+   monitor edge-to-edge. Plain dark panel, NOT blue-glow. */
 .system-detail-card {
   position: absolute;
-  top: 8px;
-  right: 12px;
-  width: 38%;
-  max-height: calc(100% - 24px);
+  top: 0;
+  right: 0;
+  width: 49%;
+  height: 100%;
   z-index: 7;
   pointer-events: auto;
-  /* slide_06 reference: plain dark panel, NOT blue-glow. The earlier
-     blue-gradient + glow shadow was my added flare. */
-  background: rgba(20, 26, 38, 0.96);
-  border: 1px solid #808080;
+  background: rgba(8, 10, 20, 0.94);
+  border-left: 1px solid #404858;
   color: #c0c8d0;
-  font-family: var(--font-mono);
+  font-family: 'Tahoma', sans-serif;
   font-size: 11px;
   line-height: 1.35;
   animation: sdc-slide-in 160ms ease-out;
-  overflow-y: auto;
-  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-/* When the multi-sector zoom is open (the secondary sector occupies the
-   right side), the detail card hides — we don't want it overlapping. */
-.sector-zoom-popup--secondary ~ .system-detail-card,
+/* slide_06: faded planet backdrop fills the body area behind the grid */
+.system-detail-card .sdc-planet-backdrop {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-height: 70%;
+  object-fit: contain;
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 0;
+  image-rendering: pixelated;
+}
+.system-detail-card .sdc-body {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+/* slide_12: when the secondary sector zoom is open, the detail card
+   docks BELOW it on the right side (not hidden) so Personnel/Fleet
+   info stays visible while comparing sectors. Slide_15 has only two
+   sector zooms with no detail card — close the detail card explicitly
+   to reach that state. */
+.sector-zoom-popup--secondary ~ .system-detail-card {
+  top: 56%;
+  height: 44%;
+}
 .system-detail-card--hidden { display: none; }
 @keyframes sdc-slide-in {
   from { opacity: 0; transform: translateY(-6px); }
@@ -876,12 +909,14 @@
   gap: 4px;
 }
 .system-detail-card .sdc-tab {
-  padding: 3px 16px;
+  padding: 3px 12px;
   font-family: 'Tahoma', sans-serif;
   font-size: 11px;
   color: #707070;
   border: 1px solid transparent;
+  cursor: pointer;
 }
+.system-detail-card .sdc-tab:hover { color: #c0c0c0; }
 .system-detail-card .sdc-tab--active {
   color: #80ff80;
   background: #0a0a14;
