@@ -773,13 +773,14 @@
   color: rgba(200, 220, 240, 0.6);
   font-size: 11px;
 }
-/* slide_04 entry: facility icons on LEFT, planet body on RIGHT.
-   Body contains: status bar above + planet photo + status bar below +
-   green name with faction dot. */
+/* Original 1998 sector entry: vertical stack of T-flag, loyalty bar,
+   production queue, planet sprite, green name. No left sidebar — every
+   planet uses this exact layout. See decompiled/analysis/sector_panel_entry_plan.md */
 .sector-zoom-popup .szp-planet {
-  display: grid;
-  grid-template-columns: 14px 1fr;
-  gap: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
   padding: 2px;
   background: transparent;
   border: 1px solid transparent;
@@ -788,53 +789,31 @@
   position: relative;
   outline: none;
   min-height: 0;
-  align-items: start;
 }
-.sector-zoom-popup .szp-planet-body {
+/* LOYALTY BAR — single bar split green (Alliance) + red (Empire) +
+   grey neutral remainder. Width matches planet sprite. */
+.sector-zoom-popup .szp-loyalty {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
+  width: 42px;
+  height: 4px;
+  background: #404040;
+  border: 1px solid #1a1a1a;
 }
-.sector-zoom-popup .szp-facilities {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding-top: 6px;
-}
-.sector-zoom-popup .szp-fac-icon {
-  width: 14px;
-  height: 11px;
-  object-fit: cover;
-  image-rendering: pixelated;
-  filter: brightness(1.2);
-}
-.sector-zoom-popup .szp-fac-icon--dim {
-  opacity: 0.35;
-  filter: grayscale(1) brightness(0.6);
-}
-/* slide_04 status bars: 5 wider segments matching the original close-up. */
-.sector-zoom-popup .szp-statusbar {
+.sector-zoom-popup .szp-loyalty-green { background: #30c030; }
+.sector-zoom-popup .szp-loyalty-red   { background: #d04040; }
+/* PRODUCTION QUEUE — row of 3 small slot indicators. */
+.sector-zoom-popup .szp-prodqueue {
   display: flex;
   gap: 1px;
   width: 42px;
   height: 4px;
+  margin-top: 1px;
 }
-.sector-zoom-popup .szp-seg {
+.sector-zoom-popup .szp-prod-slot {
   flex: 1;
   background: #404040;
+  border: 1px solid rgba(0, 0, 0, 0.6);
 }
-.sector-zoom-popup .szp-planet-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 3px;
-  vertical-align: middle;
-  border: 1px solid rgba(0,0,0,0.8);
-}
-.sector-zoom-popup .szp-planet-dot.crest-alliance { background: #4080ff; }
-.sector-zoom-popup .szp-planet-dot.crest-empire   { background: #ff4040; }
-.sector-zoom-popup .szp-planet-dot.crest-contested { background: #ffd040; }
 
 /* slide_04 close-up: small T-shaped flag pole above the planet photo.
    The horizontal cap is the faction's flag color; the vertical pole is

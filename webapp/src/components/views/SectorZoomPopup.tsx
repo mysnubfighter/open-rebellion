@@ -66,89 +66,103 @@ interface CellProps {
   onClick: () => void;
 }
 
-// slide_04: each planet has a multi-segment horizontal bar showing
-// manufacturing/garrison status. Segments are colored by activity:
-// yellow=construction, green=full, red=damaged/missing.
+// xorshift32 hash for deterministic per-system production queues.
 function hash32(x: number): number {
-  // xorshift32-style mixer — distributes bits properly so consecutive
-  // seeds produce varied outputs (avoids the (seed*K)%100 degeneration
-  // that gave all-yellow bars for sector_layout.json IDs 230-239).
   let v = (x | 0) >>> 0;
   v = (v ^ (v << 13)) >>> 0;
   v = (v ^ (v >>> 17)) >>> 0;
   v = (v ^ (v << 5)) >>> 0;
   return v >>> 0;
 }
-function StatusBar({ seed }: { seed: number }) {
-  // slide_04 close-up shows ~5 distinct segments per bar (not 8)
-  const segments = Array.from({ length: 5 }, (_, i) => {
-    const v = hash32(seed * 17 + i * 31) % 100;
-    if (v < 30) return '#40d040';        // green (active/full)
-    if (v < 50) return '#ffd040';        // yellow (in progress)
-    if (v < 70) return '#dc5050';        // red (damaged/contested)
-    return '#404040';                    // empty/grey
+
+/**
+ * LoyaltyBar — the original game's single bar showing each planet's
+ * popularity split between Alliance (green) and Empire (red).
+ * Width is proportional to popularity_alliance + popularity_empire;
+ * any unaligned remainder is shown as neutral grey.
+ *
+ * REBEXE source: UIPanel_UpdateLoyaltySlider @ 0x0045c450.
+ */
+function LoyaltyBar({ alliance, empire }: { alliance: number; empire: number }) {
+  const a = Math.max(0, Math.min(1, alliance));
+  const e = Math.max(0, Math.min(1, empire));
+  const total = a + e;
+  const greenPct = total > 0 ? (a / Math.max(total, 1)) * 100 : 0;
+  const redPct = total > 0 ? (e / Math.max(total, 1)) * 100 : 0;
+  return (
+    <div className="szp-loyalty">
+      <span className="szp-loyalty-green" style={{ width: `${greenPct}%` }} />
+      <span className="szp-loyalty-red" style={{ width: `${redPct}%` }} />
+    </div>
+  );
+}
+
+/**
+ * ProductionQueue — row of 3 small slot indicators showing what's
+ * being built at this system's manufacturing facility. Color encodes
+ * the item type. Empty slots are dimmed grey.
+ *
+ * REBEXE source: ManuMgr_UpdateProduction @ 0x0053b330.
+ *
+ * Until the engine bridge exposes real production queues, the slots
+ * are deterministically derived from the system id so each planet
+ * has a stable, distinct appearance.
+ */
+function ProductionQueue({ seed }: { seed: number }) {
+  const colors = ['#404040', '#80c0ff', '#ffd040', '#40d040', '#ff8040'];
+  // Slot count: 3 fixed (matches close-up of original sector entry)
+  const slots = Array.from({ length: 3 }, (_, i) => {
+    const v = hash32(seed * 41 + i * 53) % 100;
+    if (v < 40) return colors[0];           // empty (most planets idle)
+    if (v < 60) return colors[1];           // capital ship (blue)
+    if (v < 75) return colors[2];           // fighter (yellow)
+    if (v < 90) return colors[3];           // troop (green)
+    return colors[4];                       // facility (orange)
   });
   return (
-    <div className="szp-statusbar">
-      {segments.map((c, i) => (
-        <span key={i} className="szp-seg" style={{ background: c }} />
+    <div className="szp-prodqueue">
+      {slots.map((c, i) => (
+        <span key={i} className="szp-prod-slot" style={{ background: c }} />
       ))}
     </div>
   );
 }
 
-// slide_04: vertical strip of 4 facility icons on the LEFT of each
-// planet entry — shipyard / training / construction / defense.
-// Each icon is a tiny BMP (~10×10 px) showing facility status.
-function FacilityStrip({ seed }: { seed: number }) {
-  const ids = [10322, 10324, 10325, 10312];  // factory / shipyard / fleet / defense
-  return (
-    <div className="szp-facilities">
-      {ids.map((bmpId, i) => {
-        const active = hash32(seed * 23 + i * 7) % 100 > 40;
-        return (
-          <img
-            key={i}
-            src={`/assets/sprites/strategy/${bmpId}.png`}
-            className={`szp-fac-icon ${active ? '' : 'szp-fac-icon--dim'}`}
-            alt=""
-            draggable={false}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
+/**
+ * PlanetCell — single planet entry in the sector panel.
+ *
+ * Layout (matches original 1998 sector zoom — see
+ * decompiled/analysis/sector_panel_entry_plan.md):
+ *   T-flag → loyalty bar → production queue → planet sprite → name
+ *
+ * Every planet uses this identical layout — differences come from
+ * data (sprite, loyalty %, production queue).
+ */
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
   const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
   const crest = s.control === 'Alliance' ? 'alliance'
               : s.control === 'Empire'   ? 'empire'
               : s.control === 'Contested' ? 'contested'
-              : null;
+              : 'neutral';
   return (
     <button
       className={`szp-planet ${isSelected ? 'selected' : ''}`}
       onClick={onClick}
       title={`${s.name} — ${s.control}`}
     >
-      <FacilityStrip seed={s.id} />
-      <div className="szp-planet-body">
-        {/* slide_04: small T-shaped flag above the planet photo */}
-        <span className={`szp-flag crest-${crest ?? 'neutral'}`} />
-        <StatusBar seed={s.id} />
-        <img
-          className="szp-planet-sprite"
-          src={`/assets/sprites/strategy/${spriteId}.png`}
-          alt=""
-          draggable={false}
-        />
-        <StatusBar seed={s.id + 1} />
-        <div className="szp-planet-name">
-          {s.name}
-          {crest && <span className={`szp-planet-dot crest-${crest}`} />}
-        </div>
-      </div>
+      <span className={`szp-flag crest-${crest}`} />
+      <LoyaltyBar
+        alliance={s.popularityAlliance}
+        empire={s.popularityEmpire}
+      />
+      <ProductionQueue seed={s.id} />
+      <img
+        className="szp-planet-sprite"
+        src={`/assets/sprites/strategy/${spriteId}.png`}
+        alt=""
+        draggable={false}
+      />
+      <div className="szp-planet-name">{s.name}</div>
     </button>
   );
 }
