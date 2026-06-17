@@ -718,6 +718,19 @@
 }
 .sector-zoom-popup .szp-resize { right: 22px; }
 .sector-zoom-popup .szp-close  { right: 4px; }
+/* slide_04: "4x" speed indicator in title bar */
+.sector-zoom-popup .szp-speed {
+  position: absolute;
+  top: 4px;
+  right: 42px;
+  color: #80c0ff;
+  font-size: 9px;
+  font-family: 'Tahoma', sans-serif;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #4a5060;
+  padding: 0 3px;
+  line-height: 1;
+}
 .sector-zoom-popup .szp-close:hover {
   background: rgba(220, 80, 80, 0.5);
   color: #fff;
@@ -745,14 +758,14 @@
   color: rgba(200, 220, 240, 0.6);
   font-size: 11px;
 }
-/* slide_04 entry: vertical stack — crest, support bars, planet photo, name.
-   Reference cell is compact: ~95px wide × ~70px tall. */
+/* slide_04 entry: facility icons on LEFT, planet body on RIGHT.
+   Body contains: status bar above + planet photo + status bar below +
+   green name with faction dot. */
 .sector-zoom-popup .szp-planet {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  padding: 2px 2px 3px;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 2px;
+  padding: 2px;
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
@@ -760,7 +773,52 @@
   position: relative;
   outline: none;
   min-height: 0;
+  align-items: start;
 }
+.sector-zoom-popup .szp-planet-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+.sector-zoom-popup .szp-facilities {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 6px;
+}
+.sector-zoom-popup .szp-fac-icon {
+  width: 12px;
+  height: 9px;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+.sector-zoom-popup .szp-fac-icon--dim {
+  opacity: 0.3;
+  filter: grayscale(1) brightness(0.5);
+}
+/* slide_04 status bars: multi-segment horizontal strips. */
+.sector-zoom-popup .szp-statusbar {
+  display: flex;
+  gap: 1px;
+  width: 50px;
+  height: 4px;
+}
+.sector-zoom-popup .szp-seg {
+  flex: 1;
+  background: #404040;
+}
+.sector-zoom-popup .szp-planet-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 3px;
+  vertical-align: middle;
+  border: 1px solid rgba(0,0,0,0.8);
+}
+.sector-zoom-popup .szp-planet-dot.crest-alliance { background: #4080ff; }
+.sector-zoom-popup .szp-planet-dot.crest-empire   { background: #ff4040; }
+.sector-zoom-popup .szp-planet-dot.crest-contested { background: #ffd040; }
 .sector-zoom-popup .szp-planet:hover {
   border-color: rgba(120, 200, 255, 0.4);
   background: rgba(40, 80, 120, 0.25);
