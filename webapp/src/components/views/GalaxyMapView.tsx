@@ -592,7 +592,9 @@ export function GalaxyMapView({
       // Hit radius MUST be in world-coords; markers drawn at sprite size
       // (sprite naturalWidth * 1.4..1.8 / zoom in canvas px) → 22px in
       // screen-px ÷ zoom = world-px hit radius.
-      if (d < 22 / camera.zoom && (!best || d < best.d)) best = { id: s.id, d };
+      // Generous hit radius (32px screen-space) so clicks near a marker
+      // still select it — matches 1998 game's forgiving target box.
+      if (d < 32 / camera.zoom && (!best || d < best.d)) best = { id: s.id, d };
     }
     return best?.id ?? null;
   };

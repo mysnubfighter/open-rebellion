@@ -17,6 +17,20 @@
  *   Bottom-right panels:  x= 470 –  625, y= 410 – 475   (3 chrome displays)
  */
 
+/* slide_01-23: the 1998 game rendered everything at 640×480 native via
+   DirectDraw — bitmap blits with no anti-aliasing. To approximate that
+   on web (where browsers default to bilinear scaling), force pixelated
+   rendering on every BMP-derived image globally. Vector elements (CSS
+   borders, text) stay anti-aliased. */
+.cockpit img,
+.system-detail-card img,
+.sector-zoom-popup img,
+.mission-report-modal__panel,
+.cockpit-chrome-overlay {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 .cockpit {
   position: fixed;
   inset: 0;
