@@ -15,6 +15,12 @@ import type {
   ActiveMission,
   WorldState,
   MissionKind,
+  Fleet,
+  ProductionItem,
+  ResearchProject,
+  JediCandidate,
+  LoyaltyRow,
+  PlanetResources,
 } from '../types/game';
 
 // Lazy-loaded WASM module reference
@@ -24,8 +30,14 @@ type WasmModule = {
   get_world_state: () => WorldState;
   get_characters: () => Character[];
   get_characters_on_system: (systemId: number) => Character[];
+  get_planet_resources?: (systemId: number) => unknown;
   get_systems: () => StarSystem[];
   get_active_missions: () => ActiveMission[];
+  get_fleets?: () => Fleet[];
+  get_production?: () => ProductionItem[];
+  get_research?: () => ResearchProject[];
+  get_jedi?: () => JediCandidate[];
+  get_loyalty?: () => LoyaltyRow[];
   dispatch_mission: (charId: number, targetSystemId: number, kind: string) => bigint;
   advance_days: (n: number) => void;
 };
@@ -39,7 +51,6 @@ async function ensureWasmLoaded(): Promise<WasmModule> {
     initPromise = (async () => {
       try {
         // wasm-pack generated module
-        // @ts-expect-error - generated at build time
         const mod = await import('./pkg/rebellion_web.js');
         await mod.default();
         wasmModule = mod as unknown as WasmModule;
@@ -76,6 +87,12 @@ export const Engine = {
     return w.get_characters_on_system(systemId);
   },
 
+  async getPlanetResources(systemId: number): Promise<PlanetResources | null> {
+    const w = await ensureWasmLoaded();
+    if (!w.get_planet_resources) return null;
+    return w.get_planet_resources(systemId) as PlanetResources;
+  },
+
   async getSystems(): Promise<StarSystem[]> {
     const w = await ensureWasmLoaded();
     return w.get_systems();
@@ -98,6 +115,31 @@ export const Engine = {
   async advanceDays(n: number): Promise<void> {
     const w = await ensureWasmLoaded();
     w.advance_days(n);
+  },
+
+  async getFleets(): Promise<Fleet[]> {
+    const w = await ensureWasmLoaded();
+    return w.get_fleets ? w.get_fleets() : [];
+  },
+
+  async getProduction(): Promise<ProductionItem[]> {
+    const w = await ensureWasmLoaded();
+    return w.get_production ? w.get_production() : [];
+  },
+
+  async getResearch(): Promise<ResearchProject[]> {
+    const w = await ensureWasmLoaded();
+    return w.get_research ? w.get_research() : [];
+  },
+
+  async getJedi(): Promise<JediCandidate[]> {
+    const w = await ensureWasmLoaded();
+    return w.get_jedi ? w.get_jedi() : [];
+  },
+
+  async getLoyalty(): Promise<LoyaltyRow[]> {
+    const w = await ensureWasmLoaded();
+    return w.get_loyalty ? w.get_loyalty() : [];
   },
 };
 

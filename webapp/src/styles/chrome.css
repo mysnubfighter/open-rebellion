@@ -1045,6 +1045,67 @@
   line-height: 1.15;
   max-width: 100%;
 }
+/* planet_resources.md: Fleet/Garrisons/Defenses tabs render lists of
+   ship/troop/facility entries with name + status. */
+.system-detail-card .sdc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  font-family: 'Tahoma', sans-serif;
+  position: relative;
+  z-index: 1;
+}
+.system-detail-card .sdc-list-row {
+  display: grid;
+  grid-template-columns: 70px 1fr auto auto;
+  gap: 6px;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(60, 100, 140, 0.3);
+  font-size: 10px;
+  color: #c0c8d0;
+  align-items: center;
+}
+.system-detail-card .sdc-list-kind {
+  color: #80c0ff;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.system-detail-card .sdc-list-name {
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.system-detail-card .sdc-list-stat {
+  color: #80ff80;
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+}
+/* planet_resources.md: resource scalars (raw/refined/energy/maintenance)
+   pinned to the bottom strip of the card. */
+.system-detail-card .sdc-resources {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  border-top: 1px solid #404858;
+  padding: 3px 8px;
+  display: flex;
+  gap: 10px;
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+  color: #ffd770;
+  z-index: 2;
+}
+.system-detail-card .sdc-blockaded {
+  color: #ff4040;
+  font-weight: bold;
+  margin-left: auto;
+}
+
 .system-detail-card .sdc-empty {
   padding: 16px;
   text-align: center;

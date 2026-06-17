@@ -24,6 +24,8 @@ use serde::{Deserialize, Serialize};
 // Generated from SECTORSD.DAT + SYSTEMSD.DAT in the GOG install.
 // See decompiled/analysis/sector_layout.md for details.
 mod rebexe_galaxy;
+mod rebexe_catalogs;
+mod planet_resources;
 use wasm_bindgen::prelude::*;
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -241,6 +243,24 @@ pub fn get_world_state() -> JsValue {
 #[wasm_bindgen]
 pub fn get_characters() -> JsValue {
     ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().characters).unwrap())
+}
+
+/// Returns the full per-planet PlanetResources bundle for the given
+/// system_id. See decompiled/analysis/planet_resources.md for the
+/// 17 categories included.
+#[wasm_bindgen]
+pub fn get_planet_resources(system_id: u32) -> JsValue {
+    // Decide HQ + faction from the seeded galaxy data.
+    let (faction, is_hq) = ENGINE.with(|e| {
+        let engine = e.borrow();
+        let sys = engine.systems.iter().find(|s| s.id == system_id);
+        let faction = sys.map(|s| s.control.clone()).unwrap_or_else(|| "Neutral".into());
+        // HQ heuristic: Coruscant (265) and the canonical Alliance HQ (289 = Yavin)
+        let is_hq = system_id == 265 || system_id == 289;
+        (faction, is_hq)
+    });
+    let bundle = planet_resources::seed_resources(system_id, &faction, is_hq);
+    serde_wasm_bindgen::to_value(&bundle).unwrap()
 }
 
 #[wasm_bindgen]

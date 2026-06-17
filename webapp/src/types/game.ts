@@ -67,6 +67,26 @@ export interface StarSystem {
   pictureId?: number;
 }
 
+/** Per-planet resource bundle — mirrors planet_resources.md. */
+export interface PlanetResources {
+  manufacturingFacilities: { classId: number; className: string; hpPct: number }[];
+  productionFacilities:    { classId: number; className: string; hpPct: number }[];
+  defenseFacilities:       { classId: number; className: string; hpPct: number }[];
+  allianceFacility?:       { classId: number; className: string; hpPct: number } | null;
+  troopsGarrisoned:        { classId: number; className: string; strengthPct: number }[];
+  shipsInOrbit:            { classId: number; className: string; hullPct: number; shieldPct: number }[];
+  specialForces:           { classId: number; className: string }[];
+  charactersPresent:       { characterId: number; name: string; isMajor: boolean }[];
+  activeMissions:          { missionId: number; name: string; ticksRemaining: number }[];
+  productionQueue:         { kind: string; classId: number; className: string; progressPct: number }[];
+  rawMaterials: number;
+  refinedMaterials: number;
+  energy: number;
+  maintenancePoints: number;
+  uprisingRisk: number;
+  blockaded: boolean;
+}
+
 export interface ShipEntry {
   classId: number;
   className: string;
