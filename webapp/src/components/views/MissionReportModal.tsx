@@ -1,21 +1,21 @@
 /**
- * MissionReportModal — full-screen result screen for completed missions,
- * battles, story events.  Matches slides 11 (Espionage), 13/14 (Incite
- * Uprising), 23 (Battle outcome) of the 1998 game.
+ * MissionReportModal — slides 11, 13, 14, 23.
  *
- * Layout: dark cockpit window with cinematic backdrop image, character
- * portrait inset on the right, title at top, body text at bottom, X
- * close button top-right.
+ * Uses the 1998 game's pre-rendered STRATEGY.DLL mission-report BMPs
+ * (10522-10541, 10712+) which include the modal frame + scene art
+ * baked together. We overlay the dynamic title + body text on top of
+ * the BMP using percentage-anchored positions matched to the BMP's
+ * layout.
  */
 import { useEffect } from 'react';
 
 export interface MissionReport {
   id: number;
-  title: string;          // 'Espionage Mission Report' / 'Battle at Xyquine'
-  outcomeText: string;    // 'The Imperial fleet is victorious.'
-  bodyText: string;       // longer paragraph
-  characterPortraitId?: number;  // GOKRES.DLL portrait BMP id
-  backdropId?: string;            // cinematic image (e.g. 'mission-bg.png')
+  title: string;
+  outcomeText: string;
+  bodyText: string;
+  characterPortraitId?: number;
+  backdropId?: number;
   outcomeColor?: 'success' | 'failure' | 'neutral';
 }
 
@@ -24,8 +24,17 @@ interface Props {
   onClose: () => void;
 }
 
+// Scene BMP selection by mission type, IDs from STRATEGY.DLL extraction.
+function pickBackdropId(title: string): number {
+  const t = title.toLowerCase();
+  if (t.includes('battle'))    return 10712;  // X-wing + Mon Cal scene
+  if (t.includes('uprising'))  return 10538;  // Mos Eisley alley scene
+  if (t.includes('espionage')) return 10536;  // pilot at viewscreen
+  if (t.includes('diplomacy') || t.includes('diplomatic')) return 10822;
+  return 10522;  // empty space scene
+}
+
 export function MissionReportModal({ report, onClose }: Props) {
-  // Esc to dismiss
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' || e.key === ' ') {
@@ -40,62 +49,40 @@ export function MissionReportModal({ report, onClose }: Props) {
   const outcomeColor =
     report.outcomeColor === 'success' ? '#ffe070' :
     report.outcomeColor === 'failure' ? '#dc5050' :
-    '#c0c0c0';
+    '#ffffff';
 
-  // slide_11/13/23: scene backdrop comes from STRATEGY.DLL or
-  // EData (cinematic composites). Until those are extracted, use a
-  // category-keyed gradient as placeholder.
-  const backdropUrl = report.backdropId
-    ? `/assets/sprites/scenes/${report.backdropId}`
-    : null;
-  // Add a CSS class for category-specific gradient placeholder.
-  const titleLower = report.title.toLowerCase();
-  const sceneClass = titleLower.includes('battle') ? 'scene-battle'
-    : titleLower.includes('uprising') ? 'scene-uprising'
-    : titleLower.includes('espionage') ? 'scene-espionage'
-    : titleLower.includes('diplomacy') || titleLower.includes('diplomatic') ? 'scene-diplomacy'
-    : 'scene-default';
+  const backdropId = report.backdropId ?? pickBackdropId(report.title);
+  const backdropUrl = `/assets/sprites/strategy/${backdropId}.png`;
 
   return (
     <div className="mission-report-modal" onClick={onClose}>
-      <div className="mission-report-modal__panel" onClick={(e) => e.stopPropagation()}>
-        <div className="mission-report-modal__titlebar">
-          <span className="mission-report-modal__title">{report.title}</span>
-          {/* slide_11: up/down arrows to cycle pending reports.
-              X close on far right. */}
-          <div className="mission-report-modal__nav">
-            <button className="mission-report-modal__nav-btn" title="Previous">▲</button>
-            <button className="mission-report-modal__nav-btn" title="Next">▼</button>
-            <button className="mission-report-modal__close" onClick={onClose}>×</button>
-          </div>
+      <div
+        className="mission-report-modal__panel"
+        onClick={(e) => e.stopPropagation()}
+        style={{ backgroundImage: `url(${backdropUrl})` }}
+      >
+        {/* slide_11: title text in navy title bar baked into the BMP.
+            We overlay the dynamic title in the same band. */}
+        <div className="mission-report-modal__title-overlay">
+          {report.title}
         </div>
-        <div
-          className={`mission-report-modal__backdrop ${sceneClass}`}
-          style={backdropUrl ? { backgroundImage: `url(${backdropUrl})` } : undefined}
-        >
-          {report.characterPortraitId != null && (
-            <img
-              className="mission-report-modal__portrait"
-              src={`/assets/sprites/gokres/${report.characterPortraitId}.png`}
-              alt="character"
-              onError={(e) => {
-                // Hide if portrait missing
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-          )}
+        <div className="mission-report-modal__nav-overlay">
+          <button className="mission-report-modal__nav-btn" title="Previous">▲</button>
+          <button className="mission-report-modal__nav-btn" title="Next">▼</button>
+          <button className="mission-report-modal__close" onClick={onClose}>×</button>
         </div>
-        <div className="mission-report-modal__textblock">
-          <div
-            className="mission-report-modal__outcome"
-            style={{ color: outcomeColor }}
-          >
+
+        {/* slide_11: outcome line + body text in the BMP's text region
+            (bottom 25% of the BMP is dark-bordered text panel). */}
+        <div className="mission-report-modal__text-overlay">
+          <div className="mission-report-modal__outcome" style={{ color: outcomeColor }}>
             {report.outcomeText}
           </div>
           <div className="mission-report-modal__body">
             {report.bodyText}
           </div>
         </div>
+
         <div className="mission-report-modal__hint">
           Press SPACE or ESC to close
         </div>

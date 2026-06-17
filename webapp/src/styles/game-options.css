@@ -16,15 +16,10 @@
   /* Maintain the 4:3 aspect of the original options screen. */
   width: min(100vw, calc(100vh * 4 / 3));
   height: min(100vh, calc(100vw * 3 / 4));
-  /* slide_08: brushed-metal background. Approximated with a multi-stop
-     vertical gradient + horizontal high-frequency stripes that mimic the
-     1998 BMP's metal texture. */
+  /* slide_08: real STRATEGY.DLL brushed-metal background BMP (10336).
+     Bordered frame with metallic shine baked in. */
   background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.04) 0 1px,
-      rgba(0, 0, 0, 0.04) 1px 2px
-    ),
+    url('/assets/sprites/strategy/10336.png') center / 100% 100% no-repeat,
     linear-gradient(180deg, #8a8a88 0%, #6a6a68 50%, #555553 100%);
   border: 2px solid #2a2a28;
   box-shadow:
