@@ -32,12 +32,22 @@ interface Camera { x: number; y: number; zoom: number; }
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4.0;
 
-// The engine returns positions with a wide aspect ratio (X range ~730, Y range
-// ~375, ratio 1.95:1) but the cockpit monitor is 1.12:1.  At fit-zoom this
-// leaves ~50% of the vertical canvas empty above/below the marker cluster.
-// 1998 reference shows markers spread across the full spiral.  Stretch Y by
-// 1.5× to compensate — markers fill ~69% of canvas height instead of 46%.
-const Y_STRETCH = 1.5;
+// 1998 Rebellion sector names by id. Engine demo data uses 3 buckets
+// (Core/Inner Rim/Outer Rim) but the original game has 24 named sectors.
+// Map the buckets to the canonical "headline" names from slide_04.
+const SECTOR_NAMES: Record<number, string> = {
+  0: 'Sesswenna',     // Core Worlds (Coruscant et al.)
+  1: 'Bormea',        // Inner Rim
+  2: 'Outer Rim',     // Outer Rim
+};
+
+// World aspect is roughly 1.92:1 (X:730, Y:380). Monitor canvas at typical
+// 1280-viewport sizes is ~1.52:1, so the auto-fit will pick X as the limiting
+// axis and leave slight letterboxing top/bottom — matching slide_02 where the
+// spiral's vertical edge has dim space above and below the bright disc. An
+// earlier Y_STRETCH=1.5 over-corrected: it flipped the limiting axis to Y,
+// which under-filled X and pushed every marker into the left half.
+const Y_STRETCH = 1.0;
 
 // System position from engine, or deterministic fallback if not present
 function systemPosition(s: StarSystem, idx: number): { x: number; y: number } {
@@ -218,7 +228,40 @@ export function GalaxyMapView({
     ctx.translate(camera.x, camera.y);
     ctx.scale(camera.zoom, camera.zoom);
 
-    // No sector divider lines — original game doesn't show them on galaxy view
+    // Sector NAME labels — slide_02/04 of the 1998 reference show the
+    // sector name floating in green text near the cluster centroid (the
+    // sector zoom popup names it explicitly: "Sesswenna", etc.). Compute
+    // each sector's centroid from its member system positions and draw
+    // the name above the centroid. No boundary polygons (1998 doesn't
+    // draw them either).
+    {
+      type Acc = { sx: number; sy: number; minY: number; count: number };
+      const byS = new Map<number, Acc>();
+      for (const s of systems) {
+        const p = positions.current.get(s.id);
+        if (!p) continue;
+        const a = byS.get(s.sectorId) ?? { sx: 0, sy: 0, minY: Infinity, count: 0 };
+        a.sx += p.x; a.sy += p.y; a.count++;
+        if (p.y < a.minY) a.minY = p.y;
+        byS.set(s.sectorId, a);
+      }
+      const labelFontPx = Math.max(11, 13 / camera.zoom);
+      ctx.font = `bold ${labelFontPx}px "Tahoma", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      for (const [sid, a] of byS) {
+        if (a.count < 2) continue;
+        const cx = a.sx / a.count;
+        // Place the label above the topmost system in this sector, with
+        // a small zoom-aware gap so it doesn't collide with the sparkle.
+        const cy = a.minY - 14 / camera.zoom;
+        const label = SECTOR_NAMES[sid] ?? `Sector ${sid}`;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillText(label, cx + 1, cy + 1);
+        ctx.fillStyle = '#80ff80';
+        ctx.fillText(label, cx, cy);
+      }
+    }
 
     // Mission destination markers
     for (const m of missions) {
