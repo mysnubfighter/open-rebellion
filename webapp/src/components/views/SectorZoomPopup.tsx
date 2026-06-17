@@ -70,14 +70,23 @@ interface CellProps {
 // slide_04: each planet has a multi-segment horizontal bar showing
 // manufacturing/garrison status. Segments are colored by activity:
 // yellow=construction, green=full, red=damaged/missing.
+function hash32(x: number): number {
+  // xorshift32-style mixer — distributes bits properly so consecutive
+  // seeds produce varied outputs (avoids the (seed*K)%100 degeneration
+  // that gave all-yellow bars for sector_layout.json IDs 230-239).
+  let v = (x | 0) >>> 0;
+  v = (v ^ (v << 13)) >>> 0;
+  v = (v ^ (v >>> 17)) >>> 0;
+  v = (v ^ (v << 5)) >>> 0;
+  return v >>> 0;
+}
 function StatusBar({ seed }: { seed: number }) {
-  // Deterministic segments so reloads stay stable. 8 segments per bar.
   const segments = Array.from({ length: 8 }, (_, i) => {
-    const v = (seed * 9301 + i * 49297) % 100;
-    if (v < 40) return '#ffd040';        // yellow (in progress)
-    if (v < 70) return '#40d040';        // green (active)
-    if (v < 85) return '#dc5050';        // red (damaged)
-    return '#404040';                    // empty
+    const v = hash32(seed * 17 + i * 31) % 100;
+    if (v < 30) return '#40d040';        // green (active/full)
+    if (v < 50) return '#ffd040';        // yellow (in progress)
+    if (v < 70) return '#dc5050';        // red (damaged/contested)
+    return '#404040';                    // empty/grey
   });
   return (
     <div className="szp-statusbar">
@@ -96,7 +105,7 @@ function FacilityStrip({ seed }: { seed: number }) {
   return (
     <div className="szp-facilities">
       {ids.map((bmpId, i) => {
-        const active = ((seed + i) * 31337) % 100 > 50;
+        const active = hash32(seed * 23 + i * 7) % 100 > 40;
         return (
           <img
             key={i}
@@ -125,6 +134,8 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
     >
       <FacilityStrip seed={s.id} />
       <div className="szp-planet-body">
+        {/* slide_04: small T-shaped flag above the planet photo */}
+        <span className={`szp-flag crest-${crest ?? 'neutral'}`} />
         <StatusBar seed={s.id} />
         <img
           className="szp-planet-sprite"

@@ -819,6 +819,23 @@
 .sector-zoom-popup .szp-planet-dot.crest-alliance { background: #4080ff; }
 .sector-zoom-popup .szp-planet-dot.crest-empire   { background: #ff4040; }
 .sector-zoom-popup .szp-planet-dot.crest-contested { background: #ffd040; }
+
+/* slide_04 close-up: small T-shaped flag pole above the planet photo.
+   The horizontal cap is the faction's flag color; the vertical pole is
+   a thin white line. */
+.sector-zoom-popup .szp-flag {
+  width: 7px;
+  height: 5px;
+  border-top: 2px solid currentColor;
+  border-left: 1px solid #c0c0c0;
+  margin-left: -8px;  /* aligns over upper-left of planet */
+  align-self: flex-start;
+  color: #c0c0c0;
+}
+.sector-zoom-popup .szp-flag.crest-alliance { color: #4080ff; }
+.sector-zoom-popup .szp-flag.crest-empire   { color: #ff4040; }
+.sector-zoom-popup .szp-flag.crest-contested { color: #ffd040; }
+.sector-zoom-popup .szp-flag.crest-neutral  { color: #80c080; }
 .sector-zoom-popup .szp-planet:hover {
   border-color: rgba(120, 200, 255, 0.4);
   background: rgba(40, 80, 120, 0.25);
