@@ -1,0 +1,110 @@
+/* Mission report — slide_11 measurement: modal sits inside the cockpit
+   monitor area at ~88% × ~97%. Backdrop is constrained to monitor only
+   (same anchors as message-index). Body is large scene image (top 66%) +
+   black text block (bottom). Title bar is navy blue with white text. */
+.mission-report-modal {
+  position: fixed;
+  top: 6.24%;
+  left: 8.4%;
+  right: 15.5%;
+  bottom: 25%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  cursor: pointer;
+}
+
+.mission-report-modal__panel {
+  width: 92%;
+  height: 96%;
+  background: #000000;
+  border: 1px solid #808080;
+  display: flex;
+  flex-direction: column;
+  cursor: default;
+}
+
+/* slide_11: navy blue title bar with white text and 2 nav arrows on right */
+.mission-report-modal__titlebar {
+  background: #1a4070;
+  padding: 4px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #4a6090;
+  flex-shrink: 0;
+}
+
+.mission-report-modal__title {
+  color: #ffffff;
+  font-family: 'Tahoma', sans-serif;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  font-size: 14px;
+}
+
+.mission-report-modal__close {
+  background: transparent;
+  color: #ffffff;
+  border: none;
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+.mission-report-modal__close:hover { color: #ff8080; }
+
+/* slide_11: large scene image fills top ~66% of body. Black text panel
+   takes the bottom ~33%. The scene is a SPRITE from STRATEGY.DLL / EData/
+   showing the mission's setting + character portraits composited together. */
+.mission-report-modal__backdrop {
+  flex: 1 1 66%;
+  min-height: 0;
+  background: #050810 center/contain no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-report-modal__portrait {
+  position: absolute;
+  right: 24px;
+  bottom: 0;
+  height: 90%;
+  width: auto;
+  object-fit: contain;
+}
+
+.mission-report-modal__textblock {
+  flex: 0 0 34%;
+  padding: 12px 24px;
+  background: #000000;
+  overflow-y: auto;
+}
+
+.mission-report-modal__outcome {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.mission-report-modal__body {
+  color: #ffffff;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.mission-report-modal__hint {
+  text-align: center;
+  padding: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  letter-spacing: 2px;
+}

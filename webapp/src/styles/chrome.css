@@ -631,70 +631,69 @@
  * with round planet sprites, faction-colored names, and red/green support bars.
  * Overlays the LEFT half of the galaxy monitor (matching the 1998 reference).
  */
+/* slide_04 measurement: popup occupies left ~47% of the monitor's
+   inner game area, top-to-bottom edge to edge. Border is 1px dark line
+   matching the 1998 game's flat-panel aesthetic — no gradient bezel. */
 .sector-zoom-popup {
   position: absolute;
-  top: 8px;
-  left: 12px;
-  width: 38%;
-  max-height: calc(100% - 24px);
+  top: 0;
+  left: 0;
+  width: 47%;
+  height: 100%;
   z-index: 6;
   pointer-events: auto;
-  background: rgba(36, 40, 52, 0.94);
-}
-/* Multi-sector zoom (slide 15) — when 2 sectors are open, the SECOND
-   popup positions itself on the right half of the monitor. */
-.sector-zoom-popup--secondary {
-  left: auto;
-  right: 12px;
-  border: 1px solid #b0b8c0;
-  box-shadow:
-    0 0 0 1px #404858,
-    0 6px 20px rgba(0, 0, 0, 0.7),
-    inset 0 0 18px rgba(0, 0, 0, 0.5);
+  background: rgba(8, 10, 20, 0.92);
+  border-right: 1px solid #404858;
   color: #e0e8f0;
-  font-family: var(--font-mono);
+  font-family: 'Tahoma', sans-serif;
   display: flex;
   flex-direction: column;
   animation: szp-pop 140ms ease-out;
+}
+.sector-zoom-popup--secondary {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid #404858;
 }
 @keyframes szp-pop {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
+/* slide_04: sector name appears as GREEN text centered at top of popup,
+   no gradient title bar. Resize+close icons are tiny squares to the right. */
 .sector-zoom-popup .szp-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  position: relative;
   padding: 3px 6px;
-  background: linear-gradient(180deg, #4a5260 0%, #2c323c 100%);
-  border-bottom: 1px solid #1c2028;
-  font-size: 11px;
+  font-size: 13px;
+  background: transparent;
+  border-bottom: none;
 }
 .sector-zoom-popup .szp-title {
-  flex: 1;
-  color: #ffd770;
+  color: #80ff80;
   font-weight: bold;
-  letter-spacing: 1px;
-  text-transform: capitalize;
-}
-.sector-zoom-popup .szp-subtitle {
-  color: #dc5f3a;
-  font-size: 9px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Tahoma', sans-serif;
 }
 .sector-zoom-popup .szp-resize,
 .sector-zoom-popup .szp-close {
-  background: rgba(0, 0, 0, 0.4);
+  position: absolute;
+  top: 3px;
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid #707888;
   color: #c0c8d4;
-  width: 16px; height: 16px;
+  width: 14px; height: 14px;
   padding: 0;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
   line-height: 1;
-  font-family: var(--font-mono);
+  font-family: 'Tahoma', sans-serif;
 }
+.sector-zoom-popup .szp-resize { right: 22px; }
+.sector-zoom-popup .szp-close  { right: 4px; }
 .sector-zoom-popup .szp-close:hover {
   background: rgba(220, 80, 80, 0.5);
   color: #fff;
@@ -702,14 +701,16 @@
 .sector-zoom-popup .szp-resize:hover {
   background: rgba(120, 180, 255, 0.3);
 }
+/* slide_04: 2-column grid of planet entries, each with flag+bar+photo+name */
 .sector-zoom-popup .szp-body {
-  padding: 6px 8px;
-  /* slide_04 reference: SINGLE column of planet rows. Earlier 2-column grid
-     was my own 'flare' — original game lays planets vertically. */
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex: 1;
+  padding: 4px 6px 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: min-content;
+  gap: 6px 8px;
   overflow-y: auto;
+  align-content: start;
 }
 .sector-zoom-popup .szp-empty {
   grid-column: 1 / -1;
@@ -718,16 +719,17 @@
   color: rgba(200, 220, 240, 0.6);
   font-size: 11px;
 }
+/* slide_04 entry: vertical stack — crest, support bars, planet photo, name */
 .sector-zoom-popup .szp-planet {
-  display: grid;
-  grid-template-columns: 40px 1fr;
-  gap: 5px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 3px 4px;
+  gap: 2px;
+  padding: 3px 2px 4px;
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
   position: relative;
   outline: none;
 }
@@ -736,32 +738,30 @@
   background: rgba(40, 80, 120, 0.25);
 }
 .sector-zoom-popup .szp-planet.selected {
-  border-color: #ffd770;
-  background: rgba(80, 60, 20, 0.3);
-  box-shadow: inset 0 0 6px rgba(255, 200, 80, 0.4);
+  border-color: #80ff80;
+  background: rgba(20, 80, 20, 0.3);
 }
 .sector-zoom-popup .szp-planet-sprite {
-  width: 37px; height: 37px;
+  width: 50px; height: 50px;
   image-rendering: pixelated;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
 }
-.sector-zoom-popup .szp-planet-info {
-  min-width: 0;
-}
 .sector-zoom-popup .szp-planet-name {
-  font-size: 11px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 10px;
   font-weight: bold;
-  letter-spacing: 0.3px;
+  color: #80ff80;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 0 2px rgba(0, 0, 0, 1);
+  max-width: 100%;
 }
 .sector-zoom-popup .szp-bars {
-  margin-top: 2px;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  width: 56px;
 }
 .sector-zoom-popup .szp-bar {
   height: 4px;
@@ -776,9 +776,9 @@
 .sector-zoom-popup .szp-bar-fill.emp { background: #dc5f3a; box-shadow: 0 0 3px rgba(220,95,58,0.6); }
 .sector-zoom-popup .szp-planet-crest {
   position: absolute;
-  top: 2px;
-  right: 3px;
-  width: 9px; height: 9px;
+  top: 3px;
+  left: 4px;
+  width: 11px; height: 11px;
   pointer-events: none;
 }
 .sector-zoom-popup .szp-planet-crest.crest-alliance {
