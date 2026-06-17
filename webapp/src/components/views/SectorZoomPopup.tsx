@@ -120,49 +120,43 @@ function CoolStrobeStrip({ seed, facilityIdx, faction }: {
 }
 
 /**
- * PlanetCell — REBEXE-accurate sector entry per
- * UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110.
+ * PlanetCell — faithful visual match of slide_04 reference. NOT
+ * pretending to mirror a specific REBEXE function — see
+ * decompiled/analysis/sector_entry_rebexe_eval.md Pass 4 for why
+ * the actual sector entry constructor remains unidentified.
  *
- * Layout (positions from disassembly, scaled to fit 90×80 cell):
- *   - Left strobe strip (shipyard) at top-left
- *   - Right strobe strip (training) at top-right
- *   - LEFT status bar at (LEFT of planet, y=middle)
- *   - Planet sprite center
- *   - RIGHT status bar at (RIGHT of planet, y=middle)
- *   - Construction strobe BOTTOM-LEFT
- *   - Planet name BOTTOM (green Tahoma)
+ * Layout: planet sprite (center) + thin loyalty bar (above) + green
+ * name (below). Loyalty bar uses REBEXE's PALETTERGB-decoded colors:
+ *   bg = BLUE (PALETTERGB(0,0,255) = REBEXE 0x02FF0000)
+ *   fg = RED  (PALETTERGB(255,0,0) = REBEXE 0x020000FF)
+ * Fill width = (1 - alliance_pct), so 0% Alliance shows full red
+ * (Empire dominant) and 100% Alliance shows full blue.
  */
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
   const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
-  const faction = s.control === 'Alliance' ? 'Alliance'
-                : s.control === 'Empire'   ? 'Empire'
-                : 'Neutral';
-  // Production progress for left + right facility (deterministic).
-  const leftPct = hash32(s.id * 13 + 1) % 100;
-  const rightPct = hash32(s.id * 13 + 2) % 100;
+  const a = Math.max(0, Math.min(1, s.popularityAlliance));
+  const e = Math.max(0, Math.min(1, s.popularityEmpire));
+  // Empire fraction of the alliance+empire axis. Used to size the red
+  // foreground bar within the blue background.
+  const empireFill = e / Math.max(0.01, a + e) * 100;
   return (
     <button
       className={`szp-planet ${isSelected ? 'selected' : ''}`}
       onClick={onClick}
       title={`${s.name} — ${s.control}`}
     >
-      {/* Top: two strobe strips (shipyard L + training R) */}
-      <div className="szp-strobe-row">
-        <CoolStrobeStrip seed={s.id} facilityIdx={0} faction={faction} />
-        <CoolStrobeStrip seed={s.id} facilityIdx={1} faction={faction} />
-      </div>
-      {/* Middle: status bar | planet | status bar */}
-      <div className="szp-middle-row">
-        <CoolStatusBar pct={leftPct} faction={faction} />
-        <img
-          className="szp-planet-sprite"
-          src={`/assets/sprites/strategy/${spriteId}.png`}
-          alt=""
-          draggable={false}
+      <div className="szp-loyalty-bar">
+        <span
+          className="szp-loyalty-fill"
+          style={{ width: `${empireFill}%` }}
         />
-        <CoolStatusBar pct={rightPct} faction={faction} />
       </div>
-      {/* Bottom: name */}
+      <img
+        className="szp-planet-sprite"
+        src={`/assets/sprites/strategy/${spriteId}.png`}
+        alt=""
+        draggable={false}
+      />
       <div className="szp-planet-name">{s.name}</div>
     </button>
   );

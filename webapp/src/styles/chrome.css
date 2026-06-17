@@ -790,41 +790,23 @@
   outline: none;
   min-height: 0;
 }
-/* REBEXE-accurate per UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110:
-   - 2 strobe strips at top (shipyard L, training R), 11x53 px in source
-     (scaled to ~6x16 here)
-   - LEFT status bar 37x10 source → 14x4 here, RIGHT same
-   - Planet sprite center between the bars
-   - Bottom: construction strobe + name */
-.sector-zoom-popup .szp-strobe-row {
-  display: flex;
-  justify-content: space-between;
-  width: 60px;
-  margin-bottom: 1px;
-}
-.sector-zoom-popup .szp-strobe-strip {
-  width: 6px;
-  height: 16px;
-  background: #202020;
-  border: 1px solid #000;
-  display: inline-block;
-}
-.sector-zoom-popup .szp-middle-row {
-  display: grid;
-  grid-template-columns: 14px auto 14px;
-  align-items: center;
-  gap: 2px;
-}
-.sector-zoom-popup .szp-coolbar {
-  width: 14px;
+/* slide_04 faithful: single thin loyalty bar above the planet.
+   Colors decoded from REBEXE PALETTERGB:
+     bg #0000FF = PALETTERGB(0,0,255) = REBEXE 0x02FF0000
+     fg #FF0000 = PALETTERGB(255,0,0) = REBEXE 0x020000FF
+   The bar grows red from 0..100% as Empire popularity dominates. */
+.sector-zoom-popup .szp-loyalty-bar {
+  width: 42px;
   height: 4px;
-  background: #1c1c44;          /* REBEXE bg color 0x54000000 approx */
+  background: #0000FF;
   border: 1px solid #000;
+  margin-bottom: 1px;
   overflow: hidden;
 }
-.sector-zoom-popup .szp-coolbar-fill {
+.sector-zoom-popup .szp-loyalty-fill {
   display: block;
   height: 100%;
+  background: #FF0000;
 }
 
 /* slide_04 close-up: small T-shaped flag pole above the planet photo.
