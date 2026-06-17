@@ -37,20 +37,20 @@ const CATEGORY_ORDER: MessageCategory[] = [
   'fleet', 'alliance', 'victory', 'characters', 'galactic', 'positioning',
 ];
 
-// Placeholder glyphs until STRATEGY.DLL tab icons are extracted.
-// slide_07 tab order matches CATEGORY_ORDER above.
-const CATEGORY_GLYPH: Record<MessageCategory, string> = {
-  advice:        '★',
-  systems:       '◉',
-  defenses:      '⚔',
-  maintenance:   '⚙',
-  manufacturing: '⚒',
-  fleet:         '▲',
-  alliance:      '✦',
-  victory:       '♛',
-  characters:    '☻',
-  galactic:      '✜',
-  positioning:   '⇲',
+// Category BMPs from STRATEGY.DLL — 36×33 icons in resource range
+// 10310-10330. Visually selected per category.
+const CATEGORY_BMP_ID: Record<MessageCategory, number> = {
+  advice:        10310,  // green list icon
+  systems:       10319,
+  defenses:      10312,  // crossed sabers / red crest
+  maintenance:   10322,  // factory/wrench
+  manufacturing: 10324,  // ship-yard
+  fleet:         10325,  // ship line
+  alliance:      10311,  // Mon Mothma / alliance crest
+  victory:       10313,
+  characters:    10314,
+  galactic:      10316,
+  positioning:   10325,  // fallback
 };
 
 interface Props {
@@ -77,10 +77,8 @@ export function MessageIndexPanel({ messages, onClose, onMessageClick }: Props) 
           <button className="message-index-panel__close" onClick={onClose}>×</button>
         </div>
 
-        {/* slide_07: 11 ICON tabs in a tall strip below the title bar.
-            We don't have the BMP icons extracted yet so we render single-
-            character glyph placeholders (one per category) at the same
-            square dimensions as the reference. */}
+        {/* slide_07: 11 STRATEGY.DLL category icon tabs (36×33 BMPs) in
+            a square row below the title bar. */}
         <div className="message-index-panel__filters">
           {CATEGORY_ORDER.map((cat) => (
             <button
@@ -89,7 +87,11 @@ export function MessageIndexPanel({ messages, onClose, onMessageClick }: Props) 
               onClick={() => setActiveCat(cat)}
               title={CATEGORY_LABELS[cat]}
             >
-              {CATEGORY_GLYPH[cat]}
+              <img
+                src={`/assets/sprites/strategy/${CATEGORY_BMP_ID[cat]}.png`}
+                alt={CATEGORY_LABELS[cat]}
+                style={{ imageRendering: 'pixelated', maxWidth: '100%', maxHeight: '100%' }}
+              />
             </button>
           ))}
         </div>
