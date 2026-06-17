@@ -39,13 +39,14 @@ interface Camera { x: number; y: number; zoom: number; }
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4.0;
 
-// 1998 Rebellion sector names by id. Engine demo data uses 3 buckets
-// (Core/Inner Rim/Outer Rim) but the original game has 24 named sectors.
-// Map the buckets to the canonical "headline" names from slide_04.
+// REBEXE-authoritative sector names by id (per SECTORSD.DAT).
+// Generated from decompiled/analysis/sector_layout.json.
 const SECTOR_NAMES: Record<number, string> = {
-  0: 'Sesswenna',     // Core Worlds (Coruscant et al.)
-  1: 'Bormea',        // Inner Rim
-  2: 'Outer Rim',     // Outer Rim
+  20: 'Abrion',     21: 'Atrivis',    22: 'Churba',     23: 'Corellian',
+  24: 'Calaron',    25: 'Dolomar',    26: 'Dufilvan',   27: 'Fakir',
+  28: 'Farfin',     29: 'Glythe',     30: 'Jospro',     31: 'Kanchen',
+  32: 'Mayagil',    33: 'Moddell',    34: 'Orus',       35: 'Quelli',
+  36: 'Sesswenna',  37: 'Sluis',      38: 'Sumitra',    39: 'Xappyh',
 };
 
 // World aspect is roughly 1.92:1 (X:730, Y:380). Monitor canvas at typical

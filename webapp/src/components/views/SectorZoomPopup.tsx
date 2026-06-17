@@ -63,10 +63,13 @@ function planetSpriteFor(systemName: string, systemId: number): number {
   return PLANET_SPRITE_IDS[systemId % PLANET_SPRITE_IDS.length];
 }
 
+// REBEXE-authoritative sector names by id (per SECTORSD.DAT).
 const SECTOR_NAMES: Record<number, string> = {
-  0: 'Sesswenna',
-  1: 'Bormea',
-  2: 'Outer Rim',
+  20: 'Abrion',     21: 'Atrivis',    22: 'Churba',     23: 'Corellian',
+  24: 'Calaron',    25: 'Dolomar',    26: 'Dufilvan',   27: 'Fakir',
+  28: 'Farfin',     29: 'Glythe',     30: 'Jospro',     31: 'Kanchen',
+  32: 'Mayagil',    33: 'Moddell',    34: 'Orus',       35: 'Quelli',
+  36: 'Sesswenna',  37: 'Sluis',      38: 'Sumitra',    39: 'Xappyh',
 };
 
 interface CellProps {

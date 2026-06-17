@@ -19,6 +19,11 @@
 use std::cell::RefCell;
 
 use serde::{Deserialize, Serialize};
+
+// REBEXE-authoritative galaxy layout — 20 sectors × 10 systems each.
+// Generated from SECTORSD.DAT + SYSTEMSD.DAT in the GOG install.
+// See decompiled/analysis/sector_layout.md for details.
+mod rebexe_galaxy;
 use wasm_bindgen::prelude::*;
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -398,108 +403,32 @@ fn synthetic_duration(kind: &str) -> u32 {
 }
 
 fn build_demo_systems() -> Vec<StarSystem> {
-    let mk = |id: u32, name: &str, sector: u32, ctrl: &str, pa: f32, pe: f32, x: f32, y: f32| StarSystem {
-        id, name: name.into(), sector_id: sector, control: ctrl.into(),
-        popularity_alliance: pa, popularity_empire: pe, x, y,
-    };
-    // Distribute ~50 systems across a SPIRAL pattern matching the strategy/902
-    // galaxy image (centered ~(500, 400), spiral arms swirling out). Polar
-    // positions: r increases with id, theta sweeps multiple turns.
-    vec![
-        // === CORE WORLDS (sector 0, Imperial heartland) ===
-        mk(0,  "Coruscant",    0, "Empire",    0.20, 0.80, 500.0, 380.0),
-        mk(4,  "Bortras",      0, "Empire",    0.30, 0.70, 460.0, 340.0),
-        mk(20, "Bilbringi",    0, "Empire",    0.20, 0.80, 545.0, 410.0),
-        mk(21, "Kuat",         0, "Empire",    0.15, 0.85, 540.0, 330.0),
-        mk(29, "Corellia",     0, "Empire",    0.45, 0.55, 480.0, 420.0),
-        mk(30, "Anaxes",       0, "Empire",    0.20, 0.80, 510.0, 305.0),
-        mk(31, "Brentaal",     0, "Empire",    0.25, 0.75, 555.0, 365.0),
-        mk(32, "Chandrila",    0, "Neutral",   0.65, 0.35, 460.0, 405.0),
-        mk(33, "Alderaan",     0, "Neutral",   0.55, 0.40, 425.0, 380.0),
-        mk(34, "Fondor",       0, "Empire",    0.25, 0.75, 580.0, 355.0),
-        mk(35, "Kashyyyk",     2, "Contested", 0.55, 0.45, 615.0, 295.0),
-        mk(36, "Byss",         0, "Empire",    0.10, 0.90, 500.0, 440.0),
-
-        // === INNER RIM (sector 1) ===
-        mk(3,  "Tatooine",     1, "Empire",    0.40, 0.60, 670.0, 430.0),
-        mk(22, "Naboo",        1, "Neutral",   0.50, 0.45, 705.0, 380.0),
-        mk(23, "Bespin",       1, "Neutral",   0.55, 0.45, 645.0, 510.0),
-        mk(24, "Endor",        1, "Empire",    0.35, 0.65, 745.0, 450.0),
-        mk(28, "Ord Mantell",  1, "Empire",    0.40, 0.60, 620.0, 470.0),
-        mk(37, "Mandalore",    1, "Empire",    0.30, 0.70, 410.0, 280.0),
-        mk(38, "Mygeeto",      1, "Empire",    0.20, 0.80, 600.0, 245.0),
-        mk(39, "Kessel",       1, "Empire",    0.30, 0.70, 765.0, 410.0),
-        mk(40, "Geonosis",     1, "Empire",    0.25, 0.75, 695.0, 510.0),
-        mk(41, "Felucia",      1, "Neutral",   0.50, 0.50, 660.0, 555.0),
-        mk(42, "Mustafar",     1, "Empire",    0.15, 0.85, 720.0, 540.0),
-        mk(43, "Saleucami",    1, "Contested", 0.45, 0.55, 590.0, 510.0),
-        mk(44, "Honoghr",      1, "Empire",    0.25, 0.75, 770.0, 360.0),
-
-        // === OUTER RIM (sector 2, Rebel territory + neutral) ===
-        mk(1,  "Yavin",        2, "Alliance",  0.85, 0.15, 290.0, 480.0),
-        mk(2,  "Hoth",         2, "Alliance",  0.90, 0.10, 215.0, 410.0),
-        mk(25, "Sullust",      2, "Alliance",  0.75, 0.25, 340.0, 550.0),
-        mk(26, "Mon Calamari", 2, "Alliance",  0.85, 0.15, 250.0, 555.0),
-        mk(5,  "Dagobah",      2, "Uncontrolled", 0.50, 0.50, 380.0, 580.0),
-        mk(27, "Wayland",      2, "Contested", 0.55, 0.45, 425.0, 590.0),
-        mk(45, "Sluis Van",    2, "Alliance",  0.75, 0.25, 175.0, 470.0),
-        mk(46, "Bothawui",     2, "Alliance",  0.80, 0.20, 215.0, 555.0),
-        mk(47, "Roche",        2, "Alliance",  0.70, 0.30, 305.0, 595.0),
-        mk(48, "Polis Massa",  2, "Neutral",   0.55, 0.40, 365.0, 620.0),
-        mk(49, "Ryloth",       2, "Contested", 0.50, 0.50, 405.0, 555.0),
-        mk(50, "Christophsis", 2, "Neutral",   0.60, 0.40, 480.0, 595.0),
-        mk(51, "Lothal",       2, "Empire",    0.35, 0.65, 540.0, 555.0),
-        mk(52, "Atollon",      2, "Alliance",  0.70, 0.30, 460.0, 530.0),
-        mk(53, "Dantooine",    2, "Alliance",  0.75, 0.25, 320.0, 510.0),
-        mk(54, "Ilum",         2, "Empire",    0.30, 0.70, 165.0, 360.0),
-
-        // === DEEP CORE / UNKNOWN REGIONS ===
-        mk(55, "Roon",         2, "Uncontrolled", 0.50, 0.50, 115.0, 460.0),
-        mk(56, "Eriadu",       1, "Empire",    0.20, 0.80, 730.0, 305.0),
-        mk(57, "Carida",       0, "Empire",    0.15, 0.85, 575.0, 280.0),
-        mk(58, "Sernpidal",    1, "Empire",    0.30, 0.70, 805.0, 480.0),
-        mk(59, "Yaga Minor",   0, "Empire",    0.25, 0.75, 480.0, 270.0),
-        mk(60, "Korriban",     1, "Empire",    0.10, 0.90, 350.0, 280.0),
-        mk(61, "Tython",       2, "Alliance",  0.80, 0.20, 150.0, 540.0),
-        mk(62, "Manaan",       2, "Neutral",   0.55, 0.45, 270.0, 620.0),
-        mk(63, "Csilla",       1, "Empire",    0.30, 0.70, 845.0, 380.0),
-        mk(64, "Nirauan",      1, "Empire",    0.25, 0.75, 825.0, 430.0),
-        mk(65, "Bakura",       2, "Contested", 0.55, 0.45, 510.0, 615.0),
-
-        // === EXPANDED DEMO DATA — slide_02 marker density (~80 systems) ===
-        mk(66, "Calamari",     2, "Alliance",  0.80, 0.20, 240.0, 580.0),
-        mk(67, "Ord Pardron",  1, "Empire",    0.30, 0.70, 760.0, 290.0),
-        mk(68, "Yag-Dhul",     1, "Neutral",   0.50, 0.45, 690.0, 270.0),
-        mk(69, "Cilpar",       0, "Neutral",   0.55, 0.40, 525.0, 350.0),
-        mk(70, "Generis",      0, "Empire",    0.20, 0.80, 565.0, 295.0),
-        mk(71, "Esseles",      0, "Empire",    0.15, 0.85, 595.0, 380.0),
-        mk(72, "Rendili",      0, "Empire",    0.25, 0.75, 565.0, 425.0),
-        mk(73, "Anchoron",     1, "Empire",    0.30, 0.70, 685.0, 480.0),
-        mk(74, "Beheboth",     1, "Neutral",   0.50, 0.50, 740.0, 545.0),
-        mk(75, "Tangrene",     2, "Contested", 0.50, 0.50, 380.0, 530.0),
-        mk(76, "Sarka",        2, "Alliance",  0.70, 0.30, 195.0, 510.0),
-        mk(77, "Telos",        0, "Neutral",   0.55, 0.45, 460.0, 270.0),
-        mk(78, "Mrlsst",       1, "Neutral",   0.50, 0.45, 640.0, 230.0),
-        mk(79, "Gerrenthum",   2, "Alliance",  0.65, 0.30, 165.0, 605.0),
-        mk(80, "Krant",        2, "Neutral",   0.55, 0.45, 280.0, 660.0),
-        mk(81, "Tinnel",       1, "Empire",    0.35, 0.65, 775.0, 235.0),
-        mk(82, "Junkfort",     2, "Neutral",   0.50, 0.50, 130.0, 525.0),
-        mk(83, "Praxe",        1, "Empire",    0.30, 0.70, 720.0, 220.0),
-        mk(84, "Dolomar",      1, "Neutral",   0.55, 0.45, 660.0, 200.0),
-        mk(85, "Karra",        2, "Contested", 0.50, 0.50, 425.0, 660.0),
-        mk(86, "Berchest",     1, "Empire",    0.20, 0.80, 555.0, 240.0),
-        mk(87, "Yag Moor",     0, "Empire",    0.20, 0.80, 425.0, 250.0),
-        mk(88, "Bortras II",   0, "Empire",    0.25, 0.75, 600.0, 260.0),
-        mk(89, "Drall",        0, "Neutral",   0.55, 0.40, 495.0, 460.0),
-        mk(90, "Selonia",      0, "Neutral",   0.55, 0.40, 490.0, 405.0),
-    ]
+    // REBEXE-authoritative galaxy: 200 systems across 20 sectors, loaded
+    // from the constants generated from SECTORSD.DAT + SYSTEMSD.DAT.
+    // See decompiled/analysis/sector_layout.md.
+    use crate::rebexe_galaxy::REBEXE_SYSTEMS;
+    REBEXE_SYSTEMS
+        .iter()
+        .map(|s| StarSystem {
+            id: s.id,
+            name: s.name.into(),
+            sector_id: s.sector_id,
+            control: s.control.into(),
+            popularity_alliance: s.popularity_alliance,
+            popularity_empire: s.popularity_empire,
+            x: s.x,
+            y: s.y,
+        })
+        .collect()
 }
 
 fn build_demo_fleets() -> Vec<Fleet> {
     vec![
+        // REBEXE system IDs (per SYSTEMSD.DAT):
+        //   Coruscant=265, Yavin=289, Mon Calamari=272, Bilbringi=180, Hoth=135
         Fleet {
             id: 1, name: "Death Squadron".into(), faction: "Empire".into(),
-            current_system_id: 0, destination_system_id: None, eta_days: None,
+            current_system_id: 265, destination_system_id: None, eta_days: None,  // Coruscant
             commander_character_id: Some(5),
             ships: vec![
                 ShipEntry { class_id: 1, class_name: "Executor".into(), count: 1, hull_pct: 1.0 },
@@ -509,7 +438,7 @@ fn build_demo_fleets() -> Vec<Fleet> {
         },
         Fleet {
             id: 2, name: "Battlegroup Tau".into(), faction: "Empire".into(),
-            current_system_id: 21, destination_system_id: Some(1), eta_days: Some(18),
+            current_system_id: 180, destination_system_id: Some(289), eta_days: Some(18),  // Bilbringi → Yavin
             commander_character_id: Some(11),
             ships: vec![
                 ShipEntry { class_id: 2, class_name: "Imperial-class Star Destroyer".into(), count: 2, hull_pct: 1.0 },
@@ -518,7 +447,7 @@ fn build_demo_fleets() -> Vec<Fleet> {
         },
         Fleet {
             id: 3, name: "Rogue Squadron".into(), faction: "Alliance".into(),
-            current_system_id: 1, destination_system_id: None, eta_days: None,
+            current_system_id: 289, destination_system_id: None, eta_days: None,  // Yavin
             commander_character_id: Some(7),
             ships: vec![
                 ShipEntry { class_id: 10, class_name: "Mon Calamari Cruiser".into(), count: 2, hull_pct: 0.85 },
@@ -528,7 +457,7 @@ fn build_demo_fleets() -> Vec<Fleet> {
         },
         Fleet {
             id: 4, name: "Phoenix Group".into(), faction: "Alliance".into(),
-            current_system_id: 2, destination_system_id: None, eta_days: None,
+            current_system_id: 135, destination_system_id: None, eta_days: None,  // Hoth
             commander_character_id: Some(6),
             ships: vec![
                 ShipEntry { class_id: 10, class_name: "Mon Calamari Cruiser".into(), count: 1, hull_pct: 1.0 },
@@ -539,23 +468,26 @@ fn build_demo_fleets() -> Vec<Fleet> {
 }
 
 fn build_demo_production() -> Vec<ProductionItem> {
+    // REBEXE system IDs: Coruscant=265, Bilbringi=180, Yavin=289,
+    // Mon Calamari=272, Hoth=135. (Kuat isn't in the parsed REBEXE
+    // sector layout — using Corellia=232 as nearest Core analogue.)
     vec![
-        ProductionItem { id: 1, system_id: 0,  system_name: "Coruscant".into(),
+        ProductionItem { id: 1, system_id: 265, system_name: "Coruscant".into(),
             kind: "Capital Ship".into(), name: "Imperial-class Star Destroyer".into(),
             progress_pct: 0.65, days_remaining: 42 },
-        ProductionItem { id: 2, system_id: 21, system_name: "Kuat".into(),
+        ProductionItem { id: 2, system_id: 232, system_name: "Corellia".into(),
             kind: "Capital Ship".into(), name: "Imperial-class Star Destroyer".into(),
             progress_pct: 0.30, days_remaining: 84 },
-        ProductionItem { id: 3, system_id: 20, system_name: "Bilbringi".into(),
+        ProductionItem { id: 3, system_id: 180, system_name: "Bilbringi".into(),
             kind: "Fighter".into(), name: "TIE Interceptor".into(),
             progress_pct: 0.85, days_remaining: 6 },
-        ProductionItem { id: 4, system_id: 1, system_name: "Yavin".into(),
+        ProductionItem { id: 4, system_id: 289, system_name: "Yavin".into(),
             kind: "Fighter".into(), name: "X-Wing".into(),
             progress_pct: 0.50, days_remaining: 14 },
-        ProductionItem { id: 5, system_id: 26, system_name: "Mon Calamari".into(),
+        ProductionItem { id: 5, system_id: 272, system_name: "Mon Calamari".into(),
             kind: "Capital Ship".into(), name: "Mon Calamari Cruiser".into(),
             progress_pct: 0.20, days_remaining: 96 },
-        ProductionItem { id: 6, system_id: 2, system_name: "Hoth".into(),
+        ProductionItem { id: 6, system_id: 135, system_name: "Hoth".into(),
             kind: "Troop".into(), name: "Alliance Army Regiment".into(),
             progress_pct: 0.70, days_remaining: 9 },
     ]
@@ -595,25 +527,26 @@ fn build_demo_characters() -> Vec<Character> {
     // IDs match the seed profiles in webapp/src/hooks/useGroupProfiles.ts
     vec![
         // Alliance majors
-        major(0, "Mon Mothma", "Alliance", 1, 95, 70, 20, 90, 95),
-        major(1, "Leia Organa", "Alliance", 1, 90, 80, 60, 85, 95),
-        major(2, "Luke Skywalker", "Alliance", 1, 60, 70, 95, 80, 95),
-        major(3, "Han Solo", "Alliance", 1, 50, 85, 80, 70, 85),
+        // REBEXE system IDs: Yavin=289 (Alliance HQ), Coruscant=265 (Imperial HQ)
+        major(0, "Mon Mothma", "Alliance", 289, 95, 70, 20, 90, 95),
+        major(1, "Leia Organa", "Alliance", 289, 90, 80, 60, 85, 95),
+        major(2, "Luke Skywalker", "Alliance", 289, 60, 70, 95, 80, 95),
+        major(3, "Han Solo", "Alliance", 289, 50, 85, 80, 70, 85),
         // Empire majors
-        major(4, "Emperor Palpatine", "Empire", 0, 85, 95, 60, 95, 95),
-        major(5, "Darth Vader", "Empire", 0, 30, 75, 98, 90, 85),
-        // Alliance minors
-        minor(6, "Admiral Ackbar", "Alliance", 1, 85, 50, 70, 80, 90),
-        minor(7, "Wedge Antilles", "Alliance", 1, 40, 60, 85, 70, 90),
-        minor(8, "Lando Calrissian", "Alliance", 1, 75, 70, 60, 75, 70),
-        minor(9, "Chewbacca", "Alliance", 1, 20, 80, 90, 50, 90),
-        minor(10, "Jan Dodonna", "Alliance", 1, 60, 50, 70, 80, 85),
-        // Empire minors
-        minor(11, "Admiral Ozzel", "Empire", 0, 40, 60, 65, 70, 80),
-        minor(12, "Admiral Piett", "Empire", 0, 45, 70, 70, 80, 90),
-        minor(13, "General Grammel", "Empire", 0, 30, 65, 80, 70, 75),
-        minor(14, "Grand Admiral Thrawn", "Empire", 0, 75, 90, 85, 95, 85),
-        minor(15, "Admiral Daala", "Empire", 0, 40, 70, 80, 75, 70),
+        major(4, "Emperor Palpatine", "Empire", 265, 85, 95, 60, 95, 95),
+        major(5, "Darth Vader", "Empire", 265, 30, 75, 98, 90, 85),
+        // Alliance minors — all at Yavin (289)
+        minor(6, "Admiral Ackbar", "Alliance", 289, 85, 50, 70, 80, 90),
+        minor(7, "Wedge Antilles", "Alliance", 289, 40, 60, 85, 70, 90),
+        minor(8, "Lando Calrissian", "Alliance", 289, 75, 70, 60, 75, 70),
+        minor(9, "Chewbacca", "Alliance", 289, 20, 80, 90, 50, 90),
+        minor(10, "Jan Dodonna", "Alliance", 289, 60, 50, 70, 80, 85),
+        // Empire minors — all at Coruscant (265)
+        minor(11, "Admiral Ozzel", "Empire", 265, 40, 60, 65, 70, 80),
+        minor(12, "Admiral Piett", "Empire", 265, 45, 70, 70, 80, 90),
+        minor(13, "General Grammel", "Empire", 265, 30, 65, 80, 70, 75),
+        minor(14, "Grand Admiral Thrawn", "Empire", 265, 75, 90, 85, 95, 85),
+        minor(15, "Admiral Daala", "Empire", 265, 40, 70, 80, 75, 70),
     ]
 }
 
