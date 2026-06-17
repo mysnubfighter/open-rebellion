@@ -701,14 +701,16 @@
 .sector-zoom-popup .szp-resize:hover {
   background: rgba(120, 180, 255, 0.3);
 }
-/* slide_04: 2-column grid of planet entries, each with flag+bar+photo+name */
+/* slide_04 measurement: 2-column grid of planet entries packed TIGHTLY.
+   Reference shows ~4 rows visible, each row ~70px tall — overall gap
+   between entries is 4px vertical, 6px horizontal. */
 .sector-zoom-popup .szp-body {
   flex: 1;
-  padding: 4px 6px 6px;
+  padding: 2px 4px 4px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-auto-rows: min-content;
-  gap: 6px 8px;
+  gap: 4px 6px;
   overflow-y: auto;
   align-content: start;
 }
@@ -719,19 +721,21 @@
   color: rgba(200, 220, 240, 0.6);
   font-size: 11px;
 }
-/* slide_04 entry: vertical stack — crest, support bars, planet photo, name */
+/* slide_04 entry: vertical stack — crest, support bars, planet photo, name.
+   Reference cell is compact: ~95px wide × ~70px tall. */
 .sector-zoom-popup .szp-planet {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 3px 2px 4px;
+  gap: 1px;
+  padding: 2px 2px 3px;
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
   text-align: center;
   position: relative;
   outline: none;
+  min-height: 0;
 }
 .sector-zoom-popup .szp-planet:hover {
   border-color: rgba(120, 200, 255, 0.4);
@@ -741,30 +745,37 @@
   border-color: #80ff80;
   background: rgba(20, 80, 20, 0.3);
 }
+/* slide_04: planet photo is ~40-45px round; name immediately below with
+   no extra gap so the cell stays compact. */
 .sector-zoom-popup .szp-planet-sprite {
-  width: 50px; height: 50px;
+  width: 42px; height: 42px;
   image-rendering: pixelated;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
 .sector-zoom-popup .szp-planet-name {
   font-family: 'Tahoma', sans-serif;
   font-size: 10px;
-  font-weight: bold;
+  font-weight: normal;
   color: #80ff80;
   text-shadow: 0 0 2px rgba(0, 0, 0, 1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  margin-top: -1px;
+  line-height: 1.1;
 }
+/* slide_04: support bars sit ABOVE the planet photo as a tight stack
+   of ~3-4px high segments, ~46px wide. */
 .sector-zoom-popup .szp-bars {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  width: 56px;
+  width: 46px;
+  margin-bottom: 1px;
 }
 .sector-zoom-popup .szp-bar {
-  height: 4px;
+  height: 3px;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(80, 90, 105, 0.6);
 }

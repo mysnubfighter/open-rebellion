@@ -89,12 +89,16 @@ export function SystemContextMenu({ x, y, systemName: _systemName, onAction, onC
       }}
       onContextMenu={(e) => { e.preventDefault(); }}
     >
-      {/* slide_05: NO title bar. Items only. */}
+      {/* slide_05: NO title bar. Items only. The first item is highlighted
+          by default (1998 menus open with "most recent" command pre-armed).
+          Translate Counterpart shows a checkmark when active. */}
       <div className="system-context-menu__items">
         {ITEMS.map((it) => (
           <button
             key={it.action}
-            className="system-context-menu__item"
+            className={`system-context-menu__item${
+              it.action === 'translate-counterpart' ? ' system-context-menu__item--checked' : ''
+            }`}
             onClick={() => { onAction(it.action); onClose(); }}
           >
             {it.label}

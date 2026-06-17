@@ -1,16 +1,17 @@
-/* slide_05 measurement: 9-item floating menu, ~140×135 px, cream/off-white
-   bg with 1px black border, GREEN hover/highlight (not Win95 blue). The
-   first item shows hovered in slide_05. No title bar. */
+/* slide_05 measurement (monitor crop): menu is ~140px wide × 135px tall.
+   Cream/off-white bg, 1px black border + 1px dark drop shadow.
+   Items packed at ~14px per row. */
 .system-context-menu {
   background: #dcdcd0;
   border: 1px solid #000;
-  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
-  min-width: 150px;
-  padding: 4px 0;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  min-width: 170px;
+  padding: 3px 0;
   font-family: 'Tahoma', 'Liberation Sans', sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   color: #000;
   user-select: none;
+  line-height: 1.2;
 }
 
 .system-context-menu__items { padding: 0; }
@@ -19,16 +20,28 @@
   display: block;
   width: 100%;
   text-align: left;
-  padding: 3px 14px;
+  padding: 4px 18px 4px 22px;  /* extra left padding for optional checkmark */
   background: transparent;
   border: none;
   font: inherit;
   color: #000;
   cursor: pointer;
+  position: relative;
+  white-space: nowrap;
 }
 
+.system-context-menu__item:first-of-type,
 .system-context-menu__item:hover {
   background: #80ff80;
+  color: #000;
+  font-weight: bold;
+}
+
+/* Checkmark prefix for toggled items (slide_05 shows ✓ on Translate Counterpart) */
+.system-context-menu__item--checked::before {
+  content: '✓';
+  position: absolute;
+  left: 8px;
   color: #000;
   font-weight: bold;
 }

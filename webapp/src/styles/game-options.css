@@ -16,12 +16,21 @@
   /* Maintain the 4:3 aspect of the original options screen. */
   width: min(100vw, calc(100vh * 4 / 3));
   height: min(100vh, calc(100vw * 3 / 4));
-  background: #7a7a7a;
-  border: 1px solid #404040;
+  /* slide_08: brushed-metal background. Approximated with a multi-stop
+     vertical gradient + horizontal high-frequency stripes that mimic the
+     1998 BMP's metal texture. */
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04) 0 1px,
+      rgba(0, 0, 0, 0.04) 1px 2px
+    ),
+    linear-gradient(180deg, #8a8a88 0%, #6a6a68 50%, #555553 100%);
+  border: 2px solid #2a2a28;
   box-shadow:
-    inset 1px 1px 0 #b8b8b8,
-    inset -1px -1px 0 #404040;
-  padding: 14px;
+    inset 2px 2px 0 #b8b8b6,
+    inset -2px -2px 0 #353533;
+  padding: 16px;
   font-family: 'Tahoma', sans-serif;
   color: #e0e0e0;
 }
@@ -49,17 +58,22 @@
 .gop-section--sound    { grid-area: sound; }
 .gop-section--tactical { grid-area: tactical; }
 
+/* slide_08: each section header is a green text on a dark inset plate
+   that runs across the FULL section width with brushed-metal bezel. */
 .gop-section__title {
-  /* slide_08: green "LCD-style" text on plain dark background, no glow */
   background: #18181c;
   border: 1px solid #303338;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.5);
   color: #66dc66;
   font-family: 'Tahoma', sans-serif;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 18px;
   text-align: center;
-  padding: 3px 8px;
-  margin: -2px -2px 6px -2px;
+  padding: 5px 8px;
+  margin: -2px -2px 8px -2px;
+  letter-spacing: 1px;
 }
 
 .gop-section__body {
