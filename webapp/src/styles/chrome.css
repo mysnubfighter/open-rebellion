@@ -17,18 +17,31 @@
  *   Bottom-right panels:  x= 470 –  625, y= 410 – 475   (3 chrome displays)
  */
 
-/* slide_01-23: the 1998 game rendered everything at 640×480 native via
-   DirectDraw — bitmap blits with no anti-aliasing. To approximate that
-   on web (where browsers default to bilinear scaling), force pixelated
-   rendering on every BMP-derived image globally. Vector elements (CSS
-   borders, text) stay anti-aliased. */
+/* slide_01-23: 1998 DirectDraw blitted bitmaps with no anti-aliasing.
+   Force pixelated rendering on every BMP element globally. */
 .cockpit img,
 .system-detail-card img,
 .sector-zoom-popup img,
 .mission-report-modal__panel,
-.cockpit-chrome-overlay {
+.message-index-panel img,
+.game-options-panel img,
+.cockpit-chrome-overlay,
+.cockpit canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+/* Disable subpixel font smoothing on cockpit text so the bitmap-style
+   look matches the 1998 GDI rendering (which never used ClearType). */
+.cockpit,
+.system-detail-card,
+.sector-zoom-popup,
+.system-context-menu,
+.message-index-panel,
+.game-options-panel,
+.mission-report-modal {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .cockpit {
