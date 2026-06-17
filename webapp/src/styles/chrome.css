@@ -71,19 +71,11 @@
 
 .cockpit-frame {
   position: relative;
-  /* Fill the entire viewport — the chrome PNG stretches to fit.
-     1998 was fixed 4:3, but the user wants the web version to adapt to
-     any aspect ratio (16:9, 16:10, ultrawide, portrait) without ugly
-     pillarbox bars. Stretches up to 1.8× horizontally on ultrawide and
-     1.4× vertically in extreme portrait, then locks aspect ratio to
-     avoid grotesque distortion. All interactive elements are
-     positioned in % of the frame so they remain clickable. */
+  /* Fill viewport with letterbox cap at extreme aspect ratios. */
   width: 100vw;
   height: 100vh;
-  /* On EXTREME aspect ratios, fall back to letterboxing rather than
-     distorting the chrome PNG beyond recognition. */
-  max-width: calc(100vh * 2.4);    /* don't go wider than 2.4:1 aspect */
-  max-height: calc(100vw * 1.1);   /* don't go taller than 1:1.1 aspect */
+  max-width: calc(100vh * 2.4);
+  max-height: calc(100vw * 1.1);
   image-rendering: pixelated;
   /*
    * The chrome PNG has transparent regions in the bottom area between the
