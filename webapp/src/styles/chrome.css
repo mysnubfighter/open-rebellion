@@ -741,6 +741,10 @@
 /* slide_04 measurement: 2-column grid of planet entries packed TIGHTLY.
    Reference shows ~4 rows visible, each row ~70px tall — overall gap
    between entries is 4px vertical, 6px horizontal. */
+/* slide_04 reference: planets are positioned at their SYSTEMSD.DAT
+   (x, y) coordinates within the sector, not arranged in a grid.
+   .szp-body--absolute uses position: relative + absolutely positioned
+   planet anchors. */
 .sector-zoom-popup .szp-body {
   flex: 1;
   padding: 2px 4px 4px;
@@ -750,6 +754,17 @@
   gap: 4px 6px;
   overflow-y: auto;
   align-content: start;
+}
+.sector-zoom-popup .szp-body--absolute {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding: 6px;
+}
+.sector-zoom-popup .szp-planet-anchor {
+  position: absolute;
+  width: 90px;
+  height: 80px;
 }
 .sector-zoom-popup .szp-empty {
   grid-column: 1 / -1;

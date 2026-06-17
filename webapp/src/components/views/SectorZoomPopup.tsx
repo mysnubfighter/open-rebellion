@@ -154,18 +154,23 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
 
 export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, onClose, secondary = false }: Props) {
   const sectorSystems = useMemo(
-    () => allSystems
-      .filter((s) => s.sectorId === selectedSystem.sectorId)
-      .sort((a, b) => {
-        // slide_04: planets are arranged top-to-bottom by Y, then left-
-        // to-right by X. This produces the staggered 2-column look.
-        const ay = a.y ?? 0, by = b.y ?? 0;
-        const ax = a.x ?? 0, bx = b.x ?? 0;
-        if (Math.abs(ay - by) > 30) return ay - by;
-        return ax - bx;
-      }),
+    () => allSystems.filter((s) => s.sectorId === selectedSystem.sectorId),
     [allSystems, selectedSystem.sectorId],
   );
+
+  // 1998 original arranges planets at their ABSOLUTE (x, y) within the
+  // sector — not in a grid. Compute the sector's bbox and map each
+  // system's (x, y) to popup-local coordinates.
+  const layout = useMemo(() => {
+    if (sectorSystems.length === 0) return null;
+    const xs = sectorSystems.map((s) => s.x ?? 0);
+    const ys = sectorSystems.map((s) => s.y ?? 0);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const rangeX = Math.max(1, maxX - minX);
+    const rangeY = Math.max(1, maxY - minY);
+    return { minX, minY, rangeX, rangeY };
+  }, [sectorSystems]);
 
   const sectorName = SECTOR_NAMES[selectedSystem.sectorId] ?? `Sector ${selectedSystem.sectorId}`;
 
@@ -177,18 +182,34 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
         <button className="szp-resize" title="Resize">⇔</button>
         <button className="szp-close" onClick={onClose} title="Close (Esc)">×</button>
       </div>
-      <div className="szp-body">
+      <div className="szp-body szp-body--absolute">
         {sectorSystems.length === 0 ? (
           <div className="szp-empty">No systems known in this sector.</div>
         ) : (
-          sectorSystems.map((s) => (
-            <PlanetCell
-              key={s.id}
-              s={s}
-              isSelected={s.id === selectedSystem.id}
-              onClick={() => onSelectSystem(s.id)}
-            />
-          ))
+          sectorSystems.map((s) => {
+            // Map system's REBEXE (x, y) to popup-local % coords.
+            // The original game positions planets organically — not in
+            // a grid — per their SYSTEMSD.DAT positions.
+            const px = layout
+              ? ((s.x ?? 0) - layout.minX) / layout.rangeX * 75 + 5
+              : 0;
+            const py = layout
+              ? ((s.y ?? 0) - layout.minY) / layout.rangeY * 75 + 4
+              : 0;
+            return (
+              <div
+                key={s.id}
+                className="szp-planet-anchor"
+                style={{ left: `${px}%`, top: `${py}%` }}
+              >
+                <PlanetCell
+                  s={s}
+                  isSelected={s.id === selectedSystem.id}
+                  onClick={() => onSelectSystem(s.id)}
+                />
+              </div>
+            );
+          })
         )}
       </div>
     </div>
