@@ -109,8 +109,9 @@ export function TacticalCombatView({ session, onClose, onRetreat, onTargetChange
     return () => obs.disconnect();
   }, []);
 
-  const allianceShips = session.ships.filter((s) => s.faction === 'Alliance');
-  const empireShips = session.ships.filter((s) => s.faction === 'Empire');
+  // Both factions render in the same arena (slide_16 reference shows
+  // no per-faction sidebar — ships are positioned on the battlefield).
+  void session.ships;
   const selected = session.ships.find((s) => s.id === selectedShip);
 
   const handleTarget = (targetId: number) => {
@@ -170,21 +171,12 @@ export function TacticalCombatView({ session, onClose, onRetreat, onTargetChange
           </div>
         </header>
 
-        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '200px 1fr 200px', overflow: 'hidden' }}>
-          {/* Alliance roster */}
-          <aside className="inset" style={{ overflowY: 'auto' }}>
-            <h4 style={{ padding: 6, color: shipColor('Alliance') }}>ALLIANCE</h4>
-            {allianceShips.map((s) => (
-              <div key={s.id} onClick={() => setSelectedShip(s.id)} style={{
-                padding: 6, borderBottom: '1px solid var(--chrome-lo)',
-                cursor: 'pointer',
-                background: selectedShip === s.id ? 'var(--chrome)' : 'transparent',
-              }}>
-                <div className="small text-bright">{s.name}</div>
-                <div className="tiny text-dim">Hull {Math.round(s.hullPct * 100)}% · Shield {Math.round(s.shieldPct * 100)}%</div>
-              </div>
-            ))}
-          </aside>
+        {/* slide_16/17/18: viewport on left fills most of width, right
+            info panel ~210px wide. No left-side Alliance roster — that
+            was webapp-only flare; the original game shows ships on the
+            battlefield only, with details surfacing in the right panel
+            when one is selected. */}
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 220px', overflow: 'hidden', gap: 6 }}>
 
           {/* slide_16: BLACK starfield viewport (TACTICAL.BACKGROUND BMP
               belongs in the right info panel, not as arena floor). Add
@@ -236,32 +228,59 @@ export function TacticalCombatView({ session, onClose, onRetreat, onTargetChange
           {/* slide_16/18: right info panel with TACTICAL.BACKGROUND BMP
               behind enemy roster — gives the 1998 instrument panel look
               (mini-map, gizmo, buttons all baked into BMP 1000). */}
+          {/* slide_16/18 right info panel — uses TACTICAL.DLL BMP 1000
+              as background (mini-map + buttons + gizmo baked in). When a
+              ship is selected, slide_18 shows hull/shield/weapons gauges
+              + ship portrait + crew composite + orders. */}
           <aside className="inset" style={{
             overflowY: 'auto',
             position: 'relative',
             background: tacticalChromeBg.ready
-              ? `url(${tacticalChromeBg.src}) center/cover no-repeat #2a2a30`
+              ? `url(${tacticalChromeBg.src}) center/100% 100% no-repeat`
               : '#2a2a30',
           }}>
-            <h4 style={{
-              padding: 6, color: shipColor('Empire'),
-              background: 'rgba(0, 0, 0, 0.55)',
-              margin: 0,
-              textShadow: '0 0 3px rgba(0, 0, 0, 1)',
-            }}>EMPIRE</h4>
-            {empireShips.map((s) => (
-              <div key={s.id} onClick={() => setSelectedShip(s.id)} style={{
-                padding: 6, borderBottom: '1px solid var(--chrome-lo)',
-                cursor: 'pointer',
-                background: selectedShip === s.id
-                  ? 'rgba(220, 95, 58, 0.4)'
-                  : 'rgba(0, 0, 0, 0.45)',
-                textShadow: '0 0 3px rgba(0, 0, 0, 1)',
-              }}>
-                <div className="small text-bright">{s.name}</div>
-                <div className="tiny text-dim">Hull {Math.round(s.hullPct * 100)}% · Shield {Math.round(s.shieldPct * 100)}%</div>
+            {selected ? (
+              /* slide_18 Task Force / Fighter Group panel */
+              <div style={{ padding: 8, background: 'rgba(0,0,0,0.5)', textShadow: '0 0 3px rgba(0,0,0,1)' }}>
+                <div style={{
+                  fontFamily: 'Tahoma, sans-serif',
+                  color: '#80ff80', fontSize: 12, fontWeight: 'bold',
+                  textAlign: 'center', borderBottom: '1px solid #4a6068',
+                  paddingBottom: 4, marginBottom: 6,
+                }}>{selected.name}</div>
+                <div style={{ fontSize: 11, color: '#a0c0e0', textAlign: 'center', marginBottom: 8 }}>
+                  Task Force #1
+                </div>
+                {/* 3 gauges (hull/shield/weapons) */}
+                {[
+                  { label: 'HULL', pct: selected.hullPct, color: '#ff4040' },
+                  { label: 'SHIELD', pct: selected.shieldPct, color: '#40c0ff' },
+                  { label: 'WEAP', pct: selected.weaponPct, color: '#ffd040' },
+                ].map((g) => (
+                  <div key={g.label} style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 9, color: '#c0c0c0' }}>{g.label}</div>
+                    <div style={{
+                      height: 8, background: '#0a0a14',
+                      border: '1px solid #4a4a50', position: 'relative',
+                    }}>
+                      <div style={{
+                        width: `${g.pct * 100}%`, height: '100%', background: g.color,
+                      }} />
+                    </div>
+                  </div>
+                ))}
+                <div style={{ fontSize: 10, color: '#80ff80', marginTop: 8, textAlign: 'center' }}>
+                  {selected.target ? `Targeting #${selected.target}` : 'No Orders'}
+                </div>
+                <div style={{ fontSize: 10, color: '#80ff80', textAlign: 'center', marginTop: 2 }}>
+                  Tactics: Stand Off
+                </div>
               </div>
-            ))}
+            ) : (
+              /* No selection — keep panel clean, BMP 1000 instrument
+                 panel chrome shines through with mini-map + buttons */
+              <div style={{ height: '100%' }} />
+            )}
           </aside>
         </div>
 

@@ -29,24 +29,26 @@
   cursor: default;
 }
 
-/* Overlay the title text in the BMP's navy title bar region (top 6%). */
+/* BMP 10522/10536/10538/10712 layout: starfield border on all sides,
+   navy title bar at ~22-27% Y, scene fills middle, no baked body bar.
+   Position overlays to match the BMP's title bar location. */
 .mission-report-modal__title-overlay {
   position: absolute;
-  top: 1.5%;
-  left: 4%;
+  top: 22.5%;
+  left: 8%;
   color: #ffffff;
   font-family: 'Tahoma', sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.3px;
   z-index: 2;
   pointer-events: none;
 }
 .mission-report-modal__nav-overlay {
   position: absolute;
-  top: 1.5%;
-  right: 2%;
+  top: 22%;
+  right: 7%;
   display: flex;
-  gap: 3px;
+  gap: 2px;
   z-index: 2;
 }
 
@@ -94,16 +96,15 @@
   object-fit: contain;
 }
 
-/* slide_11: text region overlays the BMP's bottom 25% (which is a
-   dark-bordered text panel baked into the BMP). */
+/* BMP scene ends around y=85%; text panel overlays bottom 12%. */
 .mission-report-modal__text-overlay {
   position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: 3%;
-  height: 25%;
-  padding: 4px 6px;
-  background: rgba(0, 0, 0, 0.6);
+  left: 8%;
+  right: 8%;
+  bottom: 4%;
+  height: 18%;
+  padding: 3px 6px;
+  background: rgba(0, 0, 0, 0.78);
   border-top: 1px solid rgba(120, 140, 180, 0.4);
   z-index: 2;
   font-family: 'Tahoma', sans-serif;
