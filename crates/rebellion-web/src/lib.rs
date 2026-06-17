@@ -58,6 +58,77 @@ pub struct StarSystem {
     pub control: String,
     pub popularity_alliance: f32,
     pub popularity_empire: f32,
+    /// Galactic x position (arbitrary units). Optional so older bindings still parse.
+    #[serde(default)]
+    pub x: f32,
+    /// Galactic y position.
+    #[serde(default)]
+    pub y: f32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ShipEntry {
+    pub class_id: u32,
+    pub class_name: String,
+    pub count: u32,
+    pub hull_pct: f32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Fleet {
+    pub id: u32,
+    pub name: String,
+    pub faction: String,
+    pub current_system_id: u32,
+    /// If in transit, the destination system; otherwise None.
+    pub destination_system_id: Option<u32>,
+    /// Days until arrival.
+    pub eta_days: Option<u32>,
+    pub ships: Vec<ShipEntry>,
+    pub commander_character_id: Option<u32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ProductionItem {
+    pub id: u32,
+    pub system_id: u32,
+    pub system_name: String,
+    pub kind: String,         // "Capital Ship" / "Fighter" / "Troop" / "Facility"
+    pub name: String,         // "Mon Calamari Cruiser", "X-Wing", etc.
+    pub progress_pct: f32,
+    pub days_remaining: u32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchProject {
+    pub tree: String,         // "Ship" / "Troop" / "Facility"
+    pub current_level: u32,
+    pub progress_pct: f32,
+    pub assigned_character_ids: Vec<u32>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct JediCandidate {
+    pub character_id: u32,
+    pub character_name: String,
+    pub tier: String,         // "None" / "Aware" / "Training" / "Experienced"
+    pub xp_pct: f32,
+    pub is_training: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct LoyaltyRow {
+    pub system_id: u32,
+    pub system_name: String,
+    pub control: String,
+    pub uprising_risk: f32,
+    pub betrayal_risk: f32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -91,6 +162,10 @@ struct Engine {
     characters: Vec<Character>,
     systems: Vec<StarSystem>,
     missions: Vec<ActiveMission>,
+    fleets: Vec<Fleet>,
+    production: Vec<ProductionItem>,
+    research: Vec<ResearchProject>,
+    jedi: Vec<JediCandidate>,
     next_mission_id: u64,
 }
 
@@ -100,6 +175,10 @@ thread_local! {
         characters: Vec::new(),
         systems: Vec::new(),
         missions: Vec::new(),
+        fleets: Vec::new(),
+        production: Vec::new(),
+        research: Vec::new(),
+        jedi: Vec::new(),
         next_mission_id: 1,
     });
 }
@@ -121,6 +200,10 @@ pub fn init_demo_world() {
         engine.current_day = 192;
         engine.systems = build_demo_systems();
         engine.characters = build_demo_characters();
+        engine.fleets = build_demo_fleets();
+        engine.production = build_demo_production();
+        engine.research = build_demo_research();
+        engine.jedi = build_demo_jedi();
         engine.missions = Vec::new();
         engine.next_mission_id = 1;
     });
@@ -176,6 +259,47 @@ pub fn get_systems() -> JsValue {
 #[wasm_bindgen]
 pub fn get_active_missions() -> JsValue {
     ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().missions).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn get_fleets() -> JsValue {
+    ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().fleets).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn get_production() -> JsValue {
+    ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().production).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn get_research() -> JsValue {
+    ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().research).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn get_jedi() -> JsValue {
+    ENGINE.with(|e| serde_wasm_bindgen::to_value(&e.borrow().jedi).unwrap())
+}
+
+#[wasm_bindgen]
+pub fn get_loyalty() -> JsValue {
+    ENGINE.with(|e| {
+        let e = e.borrow();
+        let rows: Vec<LoyaltyRow> = e.systems.iter().map(|s| LoyaltyRow {
+            system_id: s.id,
+            system_name: s.name.clone(),
+            control: s.control.clone(),
+            // Heuristic: if controlled by Alliance/Empire and the *other* faction's
+            // popularity is high, uprising risk is high.
+            uprising_risk: match s.control.as_str() {
+                "Alliance" => s.popularity_empire,
+                "Empire" => s.popularity_alliance,
+                _ => 0.5,
+            },
+            betrayal_risk: ((s.popularity_alliance - s.popularity_empire).abs() - 0.5).max(0.0) * 2.0,
+        }).collect();
+        serde_wasm_bindgen::to_value(&rows).unwrap()
+    })
 }
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -274,19 +398,196 @@ fn synthetic_duration(kind: &str) -> u32 {
 }
 
 fn build_demo_systems() -> Vec<StarSystem> {
+    let mk = |id: u32, name: &str, sector: u32, ctrl: &str, pa: f32, pe: f32, x: f32, y: f32| StarSystem {
+        id, name: name.into(), sector_id: sector, control: ctrl.into(),
+        popularity_alliance: pa, popularity_empire: pe, x, y,
+    };
+    // Distribute ~50 systems across a SPIRAL pattern matching the strategy/902
+    // galaxy image (centered ~(500, 400), spiral arms swirling out). Polar
+    // positions: r increases with id, theta sweeps multiple turns.
     vec![
-        StarSystem { id: 0, name: "Coruscant".into(), sector_id: 0, control: "Empire".into(),
-                     popularity_alliance: 0.25, popularity_empire: 0.75 },
-        StarSystem { id: 1, name: "Yavin".into(), sector_id: 0, control: "Alliance".into(),
-                     popularity_alliance: 0.75, popularity_empire: 0.25 },
-        StarSystem { id: 2, name: "Hoth".into(), sector_id: 0, control: "Alliance".into(),
-                     popularity_alliance: 0.75, popularity_empire: 0.25 },
-        StarSystem { id: 3, name: "Tatooine".into(), sector_id: 0, control: "Empire".into(),
-                     popularity_alliance: 0.25, popularity_empire: 0.75 },
-        StarSystem { id: 4, name: "Bortras".into(), sector_id: 0, control: "Empire".into(),
-                     popularity_alliance: 0.30, popularity_empire: 0.70 },
-        StarSystem { id: 5, name: "Dagobah".into(), sector_id: 0, control: "Uncontrolled".into(),
-                     popularity_alliance: 0.50, popularity_empire: 0.50 },
+        // === CORE WORLDS (sector 0, Imperial heartland) ===
+        mk(0,  "Coruscant",    0, "Empire",    0.20, 0.80, 500.0, 380.0),
+        mk(4,  "Bortras",      0, "Empire",    0.30, 0.70, 460.0, 340.0),
+        mk(20, "Bilbringi",    0, "Empire",    0.20, 0.80, 545.0, 410.0),
+        mk(21, "Kuat",         0, "Empire",    0.15, 0.85, 540.0, 330.0),
+        mk(29, "Corellia",     0, "Empire",    0.45, 0.55, 480.0, 420.0),
+        mk(30, "Anaxes",       0, "Empire",    0.20, 0.80, 510.0, 305.0),
+        mk(31, "Brentaal",     0, "Empire",    0.25, 0.75, 555.0, 365.0),
+        mk(32, "Chandrila",    0, "Neutral",   0.65, 0.35, 460.0, 405.0),
+        mk(33, "Alderaan",     0, "Neutral",   0.55, 0.40, 425.0, 380.0),
+        mk(34, "Fondor",       0, "Empire",    0.25, 0.75, 580.0, 355.0),
+        mk(35, "Kashyyyk",     2, "Contested", 0.55, 0.45, 615.0, 295.0),
+        mk(36, "Byss",         0, "Empire",    0.10, 0.90, 500.0, 440.0),
+
+        // === INNER RIM (sector 1) ===
+        mk(3,  "Tatooine",     1, "Empire",    0.40, 0.60, 670.0, 430.0),
+        mk(22, "Naboo",        1, "Neutral",   0.50, 0.45, 705.0, 380.0),
+        mk(23, "Bespin",       1, "Neutral",   0.55, 0.45, 645.0, 510.0),
+        mk(24, "Endor",        1, "Empire",    0.35, 0.65, 745.0, 450.0),
+        mk(28, "Ord Mantell",  1, "Empire",    0.40, 0.60, 620.0, 470.0),
+        mk(37, "Mandalore",    1, "Empire",    0.30, 0.70, 410.0, 280.0),
+        mk(38, "Mygeeto",      1, "Empire",    0.20, 0.80, 600.0, 245.0),
+        mk(39, "Kessel",       1, "Empire",    0.30, 0.70, 765.0, 410.0),
+        mk(40, "Geonosis",     1, "Empire",    0.25, 0.75, 695.0, 510.0),
+        mk(41, "Felucia",      1, "Neutral",   0.50, 0.50, 660.0, 555.0),
+        mk(42, "Mustafar",     1, "Empire",    0.15, 0.85, 720.0, 540.0),
+        mk(43, "Saleucami",    1, "Contested", 0.45, 0.55, 590.0, 510.0),
+        mk(44, "Honoghr",      1, "Empire",    0.25, 0.75, 770.0, 360.0),
+
+        // === OUTER RIM (sector 2, Rebel territory + neutral) ===
+        mk(1,  "Yavin",        2, "Alliance",  0.85, 0.15, 290.0, 480.0),
+        mk(2,  "Hoth",         2, "Alliance",  0.90, 0.10, 215.0, 410.0),
+        mk(25, "Sullust",      2, "Alliance",  0.75, 0.25, 340.0, 550.0),
+        mk(26, "Mon Calamari", 2, "Alliance",  0.85, 0.15, 250.0, 555.0),
+        mk(5,  "Dagobah",      2, "Uncontrolled", 0.50, 0.50, 380.0, 580.0),
+        mk(27, "Wayland",      2, "Contested", 0.55, 0.45, 425.0, 590.0),
+        mk(45, "Sluis Van",    2, "Alliance",  0.75, 0.25, 175.0, 470.0),
+        mk(46, "Bothawui",     2, "Alliance",  0.80, 0.20, 215.0, 555.0),
+        mk(47, "Roche",        2, "Alliance",  0.70, 0.30, 305.0, 595.0),
+        mk(48, "Polis Massa",  2, "Neutral",   0.55, 0.40, 365.0, 620.0),
+        mk(49, "Ryloth",       2, "Contested", 0.50, 0.50, 405.0, 555.0),
+        mk(50, "Christophsis", 2, "Neutral",   0.60, 0.40, 480.0, 595.0),
+        mk(51, "Lothal",       2, "Empire",    0.35, 0.65, 540.0, 555.0),
+        mk(52, "Atollon",      2, "Alliance",  0.70, 0.30, 460.0, 530.0),
+        mk(53, "Dantooine",    2, "Alliance",  0.75, 0.25, 320.0, 510.0),
+        mk(54, "Ilum",         2, "Empire",    0.30, 0.70, 165.0, 360.0),
+
+        // === DEEP CORE / UNKNOWN REGIONS ===
+        mk(55, "Roon",         2, "Uncontrolled", 0.50, 0.50, 115.0, 460.0),
+        mk(56, "Eriadu",       1, "Empire",    0.20, 0.80, 730.0, 305.0),
+        mk(57, "Carida",       0, "Empire",    0.15, 0.85, 575.0, 280.0),
+        mk(58, "Sernpidal",    1, "Empire",    0.30, 0.70, 805.0, 480.0),
+        mk(59, "Yaga Minor",   0, "Empire",    0.25, 0.75, 480.0, 270.0),
+        mk(60, "Korriban",     1, "Empire",    0.10, 0.90, 350.0, 280.0),
+        mk(61, "Tython",       2, "Alliance",  0.80, 0.20, 150.0, 540.0),
+        mk(62, "Manaan",       2, "Neutral",   0.55, 0.45, 270.0, 620.0),
+        mk(63, "Csilla",       1, "Empire",    0.30, 0.70, 845.0, 380.0),
+        mk(64, "Nirauan",      1, "Empire",    0.25, 0.75, 825.0, 430.0),
+        mk(65, "Bakura",       2, "Contested", 0.55, 0.45, 510.0, 615.0),
+
+        // === EXPANDED DEMO DATA — slide_02 marker density (~80 systems) ===
+        mk(66, "Calamari",     2, "Alliance",  0.80, 0.20, 240.0, 580.0),
+        mk(67, "Ord Pardron",  1, "Empire",    0.30, 0.70, 760.0, 290.0),
+        mk(68, "Yag-Dhul",     1, "Neutral",   0.50, 0.45, 690.0, 270.0),
+        mk(69, "Cilpar",       0, "Neutral",   0.55, 0.40, 525.0, 350.0),
+        mk(70, "Generis",      0, "Empire",    0.20, 0.80, 565.0, 295.0),
+        mk(71, "Esseles",      0, "Empire",    0.15, 0.85, 595.0, 380.0),
+        mk(72, "Rendili",      0, "Empire",    0.25, 0.75, 565.0, 425.0),
+        mk(73, "Anchoron",     1, "Empire",    0.30, 0.70, 685.0, 480.0),
+        mk(74, "Beheboth",     1, "Neutral",   0.50, 0.50, 740.0, 545.0),
+        mk(75, "Tangrene",     2, "Contested", 0.50, 0.50, 380.0, 530.0),
+        mk(76, "Sarka",        2, "Alliance",  0.70, 0.30, 195.0, 510.0),
+        mk(77, "Telos",        0, "Neutral",   0.55, 0.45, 460.0, 270.0),
+        mk(78, "Mrlsst",       1, "Neutral",   0.50, 0.45, 640.0, 230.0),
+        mk(79, "Gerrenthum",   2, "Alliance",  0.65, 0.30, 165.0, 605.0),
+        mk(80, "Krant",        2, "Neutral",   0.55, 0.45, 280.0, 660.0),
+        mk(81, "Tinnel",       1, "Empire",    0.35, 0.65, 775.0, 235.0),
+        mk(82, "Junkfort",     2, "Neutral",   0.50, 0.50, 130.0, 525.0),
+        mk(83, "Praxe",        1, "Empire",    0.30, 0.70, 720.0, 220.0),
+        mk(84, "Dolomar",      1, "Neutral",   0.55, 0.45, 660.0, 200.0),
+        mk(85, "Karra",        2, "Contested", 0.50, 0.50, 425.0, 660.0),
+        mk(86, "Berchest",     1, "Empire",    0.20, 0.80, 555.0, 240.0),
+        mk(87, "Yag Moor",     0, "Empire",    0.20, 0.80, 425.0, 250.0),
+        mk(88, "Bortras II",   0, "Empire",    0.25, 0.75, 600.0, 260.0),
+        mk(89, "Drall",        0, "Neutral",   0.55, 0.40, 495.0, 460.0),
+        mk(90, "Selonia",      0, "Neutral",   0.55, 0.40, 490.0, 405.0),
+    ]
+}
+
+fn build_demo_fleets() -> Vec<Fleet> {
+    vec![
+        Fleet {
+            id: 1, name: "Death Squadron".into(), faction: "Empire".into(),
+            current_system_id: 0, destination_system_id: None, eta_days: None,
+            commander_character_id: Some(5),
+            ships: vec![
+                ShipEntry { class_id: 1, class_name: "Executor".into(), count: 1, hull_pct: 1.0 },
+                ShipEntry { class_id: 2, class_name: "Imperial-class Star Destroyer".into(), count: 4, hull_pct: 0.95 },
+                ShipEntry { class_id: 3, class_name: "Victory Star Destroyer".into(), count: 6, hull_pct: 0.90 },
+            ],
+        },
+        Fleet {
+            id: 2, name: "Battlegroup Tau".into(), faction: "Empire".into(),
+            current_system_id: 21, destination_system_id: Some(1), eta_days: Some(18),
+            commander_character_id: Some(11),
+            ships: vec![
+                ShipEntry { class_id: 2, class_name: "Imperial-class Star Destroyer".into(), count: 2, hull_pct: 1.0 },
+                ShipEntry { class_id: 4, class_name: "Strike Cruiser".into(), count: 3, hull_pct: 1.0 },
+            ],
+        },
+        Fleet {
+            id: 3, name: "Rogue Squadron".into(), faction: "Alliance".into(),
+            current_system_id: 1, destination_system_id: None, eta_days: None,
+            commander_character_id: Some(7),
+            ships: vec![
+                ShipEntry { class_id: 10, class_name: "Mon Calamari Cruiser".into(), count: 2, hull_pct: 0.85 },
+                ShipEntry { class_id: 11, class_name: "Nebulon-B Frigate".into(), count: 4, hull_pct: 1.0 },
+                ShipEntry { class_id: 12, class_name: "Corellian Corvette".into(), count: 6, hull_pct: 0.95 },
+            ],
+        },
+        Fleet {
+            id: 4, name: "Phoenix Group".into(), faction: "Alliance".into(),
+            current_system_id: 2, destination_system_id: None, eta_days: None,
+            commander_character_id: Some(6),
+            ships: vec![
+                ShipEntry { class_id: 10, class_name: "Mon Calamari Cruiser".into(), count: 1, hull_pct: 1.0 },
+                ShipEntry { class_id: 12, class_name: "Corellian Corvette".into(), count: 4, hull_pct: 1.0 },
+            ],
+        },
+    ]
+}
+
+fn build_demo_production() -> Vec<ProductionItem> {
+    vec![
+        ProductionItem { id: 1, system_id: 0,  system_name: "Coruscant".into(),
+            kind: "Capital Ship".into(), name: "Imperial-class Star Destroyer".into(),
+            progress_pct: 0.65, days_remaining: 42 },
+        ProductionItem { id: 2, system_id: 21, system_name: "Kuat".into(),
+            kind: "Capital Ship".into(), name: "Imperial-class Star Destroyer".into(),
+            progress_pct: 0.30, days_remaining: 84 },
+        ProductionItem { id: 3, system_id: 20, system_name: "Bilbringi".into(),
+            kind: "Fighter".into(), name: "TIE Interceptor".into(),
+            progress_pct: 0.85, days_remaining: 6 },
+        ProductionItem { id: 4, system_id: 1, system_name: "Yavin".into(),
+            kind: "Fighter".into(), name: "X-Wing".into(),
+            progress_pct: 0.50, days_remaining: 14 },
+        ProductionItem { id: 5, system_id: 26, system_name: "Mon Calamari".into(),
+            kind: "Capital Ship".into(), name: "Mon Calamari Cruiser".into(),
+            progress_pct: 0.20, days_remaining: 96 },
+        ProductionItem { id: 6, system_id: 2, system_name: "Hoth".into(),
+            kind: "Troop".into(), name: "Alliance Army Regiment".into(),
+            progress_pct: 0.70, days_remaining: 9 },
+    ]
+}
+
+fn build_demo_research() -> Vec<ResearchProject> {
+    vec![
+        ResearchProject {
+            tree: "Ship".into(), current_level: 2, progress_pct: 0.45,
+            assigned_character_ids: vec![10],
+        },
+        ResearchProject {
+            tree: "Troop".into(), current_level: 1, progress_pct: 0.20,
+            assigned_character_ids: vec![],
+        },
+        ResearchProject {
+            tree: "Facility".into(), current_level: 3, progress_pct: 0.80,
+            assigned_character_ids: vec![6],
+        },
+    ]
+}
+
+fn build_demo_jedi() -> Vec<JediCandidate> {
+    vec![
+        JediCandidate { character_id: 2, character_name: "Luke Skywalker".into(),
+            tier: "Training".into(), xp_pct: 0.45, is_training: true },
+        JediCandidate { character_id: 1, character_name: "Leia Organa".into(),
+            tier: "Aware".into(), xp_pct: 0.15, is_training: false },
+        JediCandidate { character_id: 4, character_name: "Emperor Palpatine".into(),
+            tier: "Experienced".into(), xp_pct: 1.0, is_training: false },
+        JediCandidate { character_id: 5, character_name: "Darth Vader".into(),
+            tier: "Experienced".into(), xp_pct: 1.0, is_training: false },
     ]
 }
 
@@ -365,6 +666,10 @@ mod tests {
             engine.characters.clear();
             engine.systems.clear();
             engine.missions.clear();
+            engine.fleets.clear();
+            engine.production.clear();
+            engine.research.clear();
+            engine.jedi.clear();
             engine.next_mission_id = 1;
         });
     }
@@ -378,7 +683,11 @@ mod tests {
             let e = e.borrow();
             assert_eq!(e.current_day, 192);
             assert_eq!(e.characters.len(), 16);
-            assert_eq!(e.systems.len(), 6);
+            assert!(e.systems.len() >= 16);
+            assert!(!e.fleets.is_empty());
+            assert!(!e.production.is_empty());
+            assert!(!e.research.is_empty());
+            assert!(!e.jedi.is_empty());
         });
     }
 
