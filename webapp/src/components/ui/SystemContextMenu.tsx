@@ -73,10 +73,11 @@ export function SystemContextMenu({ x, y, systemName: _systemName, onAction, onC
     };
   }, []);
 
-  // Adjust position so menu stays in viewport
-  const w = 200, h = 280;
-  const adjX = Math.min(x, window.innerWidth - w - 8);
-  const adjY = Math.min(y, window.innerHeight - h - 8);
+  // slide_05: menu opens slightly below + right of the clicked system
+  // (anchored to the planet sprite). Adjust to stay in viewport.
+  const w = 160, h = 200;
+  const adjX = Math.min(Math.max(x + 8, 8), window.innerWidth - w - 8);
+  const adjY = Math.min(Math.max(y + 4, 8), window.innerHeight - h - 8);
 
   return (
     <div

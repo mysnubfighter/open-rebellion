@@ -66,6 +66,11 @@ export function App() {
   // Second selected system for the multi-sector zoom (slide 15).
   // Shift-click any left-rail cell or galaxy marker to set it; ESC clears.
   const [secondSelectedSystemId, setSecondSelectedSystemId] = useState<number | null>(null);
+  // slide_06 vs slide_04: detail card (Personnel pane) only opens when
+  // the user clicks a PLANET INSIDE the sector zoom popup, not when
+  // they click a star on the galaxy. The galaxy click just opens the
+  // sector zoom (slide_04).
+  const [detailSystemId, setDetailSystemId] = useState<number | null>(null);
   const [reportQueue, setReportQueue] = useState<MissionReport[]>([]);
   // Persistent message log — feed from engine events; rendered by
   // MessageIndexPanel when activePanel === 'messages'.
@@ -193,7 +198,8 @@ export function App() {
           outcomeColor: 'failure',
         }]);
       }
-      if (e.key === 'b') {
+      // 'B' Shift+B: battle outcome report (slide_23)
+      if (e.key === 'B' && e.shiftKey) {
         setReportQueue((q) => [...q, {
           id: Date.now(),
           title: 'Battle at Xyquine',
@@ -374,7 +380,14 @@ export function App() {
               <SectorZoomPopup
                 allSystems={systems}
                 selectedSystem={sel}
-                onSelectSystem={(id) => { setSelectedSystemId(id); setZoomPopupClosed(false); }}
+                onSelectSystem={(id) => {
+                  // slide_06: clicking a planet INSIDE the popup opens the
+                  // Personnel pane on the right. Also update primary
+                  // selection so reticle moves.
+                  setSelectedSystemId(id);
+                  setDetailSystemId(id);
+                  setZoomPopupClosed(false);
+                }}
                 onClose={() => setZoomPopupClosed(true)}
               />
             )}
@@ -392,11 +405,20 @@ export function App() {
                 />
               );
             })()}
-            <SystemDetailCard
-              system={sel}
-              characters={characters}
-              onClose={() => { setSelectedSystemId(null); setZoomPopupClosed(false); }}
-            />
+            {/* slide_06: detail card ONLY when user clicked a planet in
+                the popup (not just any galaxy star). Otherwise the right
+                half stays as the compressed mini-galaxy (slide_04). */}
+            {detailSystemId != null && (() => {
+              const detail = systems.find((s) => s.id === detailSystemId);
+              if (!detail) return null;
+              return (
+                <SystemDetailCard
+                  system={detail}
+                  characters={characters}
+                  onClose={() => setDetailSystemId(null)}
+                />
+              );
+            })()}
           </>;
         })()}
       </CockpitFrame>
