@@ -149,7 +149,16 @@ export function App() {
       if (e.key === '1') setSpeed('1x');
       if (e.key === '2') setSpeed('2x');
       if (e.key === '4') setSpeed('4x');
-      if (e.key === 'v' || e.key === 'V') setViewPickerVisible((v) => !v);
+      // REBEXE 'V': cycle through view modes (control → popularity → missions → fleets).
+      // Also still toggle the picker for discoverability.
+      if (e.key === 'v' || e.key === 'V') {
+        setGalaxyView((m) => {
+          const order: GalaxyViewMode[] = ['control', 'popularity', 'missions', 'fleets'];
+          const idx = order.indexOf(m);
+          return order[(idx + 1) % order.length];
+        });
+        setViewPickerVisible(true);
+      }
       // 'm' opens the Message Index — there's no right-rail button for it
       // in the 1998 layout; users brought it up via the C-3PO advisor
       // portrait (1998 also had a Messages icon in the chrome). Hotkey for now.

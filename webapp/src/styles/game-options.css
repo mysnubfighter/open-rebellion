@@ -96,15 +96,24 @@
   padding: 4px 6px;
   font-size: 12px;
 }
+/* slide_08: save slot icons — left is small red save LED, right is
+   yellow folder. Render via CSS for now (no BMP icons yet). */
 .gop-saveslot__icon {
   width: 24px; height: 24px;
-  background: #404448;
-  border: 1px solid #6a6e76;
+  background: #2a2a30;
+  border: 1px solid #4a4e56;
+  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.3);
   color: #d0d4dc;
   font-size: 14px;
   cursor: pointer;
   padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
+.gop-saveslot__icon:first-child { color: #ff4040; }
+.gop-saveslot__icon:last-child  { color: #ffc060; }
 .gop-saveslot__icon:hover { background: #707480; }
 .gop-saveslot__icon:disabled { opacity: 0.4; cursor: not-allowed; }
 .gop-saveslot__name {
@@ -167,24 +176,58 @@
 }
 .gop-toggle.off .gop-toggle__state { color: #806060; }
 
+/* slide_08: slider rows with icon + segmented cyan-tick track. */
 .gop-slider {
   display: grid;
-  grid-template-columns: 24px 1fr;
+  grid-template-columns: 32px 1fr;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
+  gap: 8px;
+  padding: 6px 6px;
 }
 .gop-slider__icon {
-  font-size: 16px;
-  background: #2a2e36;
+  font-size: 18px;
+  background: #1a1a20;
   border: 1px solid #4a4e56;
+  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.4);
   text-align: center;
-  padding: 2px 0;
+  padding: 4px 0;
+  width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+/* slider track: dark inset bg + cyan-tick gradient when filled */
 .gop-slider input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
   width: 100%;
-  height: 18px;
-  accent-color: #50ff50;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+.gop-slider input[type=range]::-webkit-slider-runnable-track {
+  height: 16px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 6px,
+      rgba(0, 255, 255, 0.6) 6px 7px
+    ),
+    linear-gradient(180deg, #0a1a1a, #1a3030);
+  border: 1px solid #4a6068;
+  box-shadow: inset 1px 1px 0 rgba(0,0,0,0.5);
+}
+.gop-slider input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 10px;
+  background: #b0b0b0;
+  border: 1px solid #404040;
+  box-shadow: inset 1px 1px 0 #e0e0e0;
+  cursor: pointer;
+  margin-top: -3px;
 }
 
 .gop-close {
