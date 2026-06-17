@@ -63,12 +63,13 @@ pub struct StarSystem {
     pub control: String,
     pub popularity_alliance: f32,
     pub popularity_empire: f32,
-    /// Galactic x position (arbitrary units). Optional so older bindings still parse.
     #[serde(default)]
     pub x: f32,
-    /// Galactic y position.
     #[serde(default)]
     pub y: f32,
+    /// REBEXE picture_id from SYSTEMSD.DAT — selects the planet portrait BMP.
+    #[serde(default)]
+    pub picture_id: u32,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -418,6 +419,7 @@ fn build_demo_systems() -> Vec<StarSystem> {
             popularity_empire: s.popularity_empire,
             x: s.x,
             y: s.y,
+            picture_id: s.picture_id,
         })
         .collect()
 }

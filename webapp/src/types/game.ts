@@ -61,6 +61,61 @@ export interface StarSystem {
   control: SystemControl;
   popularityAlliance: number;
   popularityEmpire: number;
+  x?: number;
+  y?: number;
+  /** REBEXE picture_id from SYSTEMSD.DAT — selects planet portrait. */
+  pictureId?: number;
+}
+
+export interface ShipEntry {
+  classId: number;
+  className: string;
+  count: number;
+  hullPct: number;
+}
+
+export interface Fleet {
+  id: number;
+  name: string;
+  faction: Faction;
+  currentSystemId: number;
+  destinationSystemId: number | null;
+  etaDays: number | null;
+  ships: ShipEntry[];
+  commanderCharacterId: number | null;
+}
+
+export interface ProductionItem {
+  id: number;
+  systemId: number;
+  systemName: string;
+  kind: 'Capital Ship' | 'Fighter' | 'Troop' | 'Facility';
+  name: string;
+  progressPct: number;
+  daysRemaining: number;
+}
+
+export interface ResearchProject {
+  tree: 'Ship' | 'Troop' | 'Facility';
+  currentLevel: number;
+  progressPct: number;
+  assignedCharacterIds: number[];
+}
+
+export interface JediCandidate {
+  characterId: number;
+  characterName: string;
+  tier: 'None' | 'Aware' | 'Training' | 'Experienced';
+  xpPct: number;
+  isTraining: boolean;
+}
+
+export interface LoyaltyRow {
+  systemId: number;
+  systemName: string;
+  control: SystemControl;
+  uprisingRisk: number;
+  betrayalRisk: number;
 }
 
 export interface ActiveMission {
@@ -79,4 +134,5 @@ export interface WorldState {
   characterCount: number;
   systemCount: number;
   activeMissionCount: number;
+  playerFaction?: Faction;
 }

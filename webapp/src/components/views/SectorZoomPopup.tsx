@@ -28,29 +28,28 @@ interface Props {
   secondary?: boolean;
 }
 
+// Sorted list of 37×37 planet BMP IDs in STRATEGY.DLL (10212..10240 with
+// gap at 10235-10236). REBEXE's picture_id field (1..26) is a 1-indexed
+// offset into this list.
 const PLANET_SPRITE_IDS = [
-  10212, 10213, 10214, 10215, 10216, 10217, 10218, 10219, 10220,
-  10221, 10222, 10223, 10224, 10225, 10226, 10227, 10228, 10229,
-  10230, 10231, 10232, 10233, 10234, 10237, 10238, 10239, 10240,
+  10212, 10213, 10214, 10215, 10216, 10217, 10218, 10219, 10220, 10221,
+  10222, 10223, 10224, 10225, 10226, 10227, 10228, 10229, 10230, 10231,
+  10232, 10233, 10234, 10237, 10238, 10239, 10240,
 ];
 
-// Canonical planet→sprite assignments (preserves planet identity).
-const CANONICAL_PLANET_SPRITES: Record<string, number> = {
-  Coruscant: 10212, Hoth: 10219, Tatooine: 10224, Yavin: 10222,
-  Endor: 10227, Naboo: 10215, 'Mon Calamari': 10221, Bespin: 10216,
-  Dagobah: 10229, Kashyyyk: 10222, Sullust: 10230, Bothawui: 10231,
-  Alderaan: 10215, Corellia: 10214, Kuat: 10217, Geonosis: 10224,
-  Mustafar: 10228, Ilum: 10219, Felucia: 10227, Ryloth: 10223,
-  Dantooine: 10226, Mygeeto: 10219, Korriban: 10228,
-  Chandrila: 10215, 'Yaga Minor': 10220, Bortras: 10213, Averam: 10216,
-  Ghorman: 10218, Corsin: 10221, Balmorra: 10225, Uvena: 10230,
-  Svivren: 10227,
-};
-
-function planetSpriteFor(systemName: string, systemId: number): number {
-  const c = CANONICAL_PLANET_SPRITES[systemName];
-  if (c) return c;
-  return PLANET_SPRITE_IDS[systemId % PLANET_SPRITE_IDS.length];
+/**
+ * Maps a system to its planet sprite BMP id.
+ *
+ * Uses the REBEXE `picture_id` field from SYSTEMSD.DAT (which is the
+ * canonical 1998 game's planet assignment) as the index into the
+ * sorted STRATEGY.DLL planet BMP table. Falls back to a deterministic
+ * id-based pick when picture_id is missing.
+ */
+function planetSpriteFor(s: { name: string; id: number; pictureId?: number }): number {
+  if (s.pictureId && s.pictureId >= 1 && s.pictureId <= PLANET_SPRITE_IDS.length) {
+    return PLANET_SPRITE_IDS[s.pictureId - 1];
+  }
+  return PLANET_SPRITE_IDS[s.id % PLANET_SPRITE_IDS.length];
 }
 
 const SECTOR_NAMES: Record<number, string> = {
@@ -121,7 +120,7 @@ function FacilityStrip({ seed }: { seed: number }) {
 }
 
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
-  const spriteId = planetSpriteFor(s.name, s.id);
+  const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
   const crest = s.control === 'Alliance' ? 'alliance'
               : s.control === 'Empire'   ? 'empire'
               : s.control === 'Contested' ? 'contested'
