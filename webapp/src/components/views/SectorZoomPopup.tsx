@@ -80,7 +80,8 @@ function hash32(x: number): number {
   return v >>> 0;
 }
 function StatusBar({ seed }: { seed: number }) {
-  const segments = Array.from({ length: 8 }, (_, i) => {
+  // slide_04 close-up shows ~5 distinct segments per bar (not 8)
+  const segments = Array.from({ length: 5 }, (_, i) => {
     const v = hash32(seed * 17 + i * 31) % 100;
     if (v < 30) return '#40d040';        // green (active/full)
     if (v < 50) return '#ffd040';        // yellow (in progress)

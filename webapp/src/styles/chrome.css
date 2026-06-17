@@ -803,20 +803,21 @@
   padding-top: 6px;
 }
 .sector-zoom-popup .szp-fac-icon {
-  width: 12px;
-  height: 9px;
+  width: 14px;
+  height: 11px;
   object-fit: cover;
   image-rendering: pixelated;
+  filter: brightness(1.2);
 }
 .sector-zoom-popup .szp-fac-icon--dim {
-  opacity: 0.3;
-  filter: grayscale(1) brightness(0.5);
+  opacity: 0.35;
+  filter: grayscale(1) brightness(0.6);
 }
-/* slide_04 status bars: multi-segment horizontal strips. */
+/* slide_04 status bars: 5 wider segments matching the original close-up. */
 .sector-zoom-popup .szp-statusbar {
   display: flex;
   gap: 1px;
-  width: 50px;
+  width: 42px;
   height: 4px;
 }
 .sector-zoom-popup .szp-seg {
@@ -859,10 +860,11 @@
   border-color: #80ff80;
   background: rgba(20, 80, 20, 0.3);
 }
-/* slide_04: planet photo is ~40-45px round; name immediately below with
-   no extra gap so the cell stays compact. */
+/* slide_04: planet photo native is 37x37 (STRATEGY.DLL 10212-40).
+   Render at 1:1 native size to preserve crispness — upscaling adds
+   blur even with pixelated rendering. */
 .sector-zoom-popup .szp-planet-sprite {
-  width: 42px; height: 42px;
+  width: 37px; height: 37px;
   image-rendering: pixelated;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
