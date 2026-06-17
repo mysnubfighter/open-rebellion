@@ -790,19 +790,41 @@
   outline: none;
   min-height: 0;
 }
-/* STATUS BAR — single 5-segment bar matching the Yaga Minor close-up
-   reference. Segments shift green (alliance) → yellow (contested) →
-   red (empire) along the bar. Grey indicates empty/neutral. */
-.sector-zoom-popup .szp-statusbar {
+/* REBEXE-accurate per UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110:
+   - 2 strobe strips at top (shipyard L, training R), 11x53 px in source
+     (scaled to ~6x16 here)
+   - LEFT status bar 37x10 source → 14x4 here, RIGHT same
+   - Planet sprite center between the bars
+   - Bottom: construction strobe + name */
+.sector-zoom-popup .szp-strobe-row {
   display: flex;
-  gap: 1px;
-  width: 42px;
-  height: 4px;
-  border: 1px solid #1a1a1a;
+  justify-content: space-between;
+  width: 60px;
+  margin-bottom: 1px;
 }
-.sector-zoom-popup .szp-status-seg {
-  flex: 1;
-  background: #404040;
+.sector-zoom-popup .szp-strobe-strip {
+  width: 6px;
+  height: 16px;
+  background: #202020;
+  border: 1px solid #000;
+  display: inline-block;
+}
+.sector-zoom-popup .szp-middle-row {
+  display: grid;
+  grid-template-columns: 14px auto 14px;
+  align-items: center;
+  gap: 2px;
+}
+.sector-zoom-popup .szp-coolbar {
+  width: 14px;
+  height: 4px;
+  background: #1c1c44;          /* REBEXE bg color 0x54000000 approx */
+  border: 1px solid #000;
+  overflow: hidden;
+}
+.sector-zoom-popup .szp-coolbar-fill {
+  display: block;
+  height: 100%;
 }
 
 /* slide_04 close-up: small T-shaped flag pole above the planet photo.

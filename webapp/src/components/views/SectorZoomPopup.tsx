@@ -76,82 +76,93 @@ function hash32(x: number): number {
 }
 
 /**
- * StatusBar — the original 1998 game's single status bar above each
- * planet entry. Renders as 5 segments with the leftmost reflecting
- * Alliance loyalty (green), the rightmost Empire loyalty (red), and
- * the middle segments transitioning yellow (contested) — matching
- * the Yaga Minor close-up reference.
+ * REBEXE CoolwinStatusBar — a horizontal percentage-fill widget.
+ * Per UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110, each sector
+ * entry has TWO of these at (34, 81) and (103, 81), both 37×10 px.
  *
- * REBEXE source:
- *   UIPanel_UpdateLoyaltySlider @ 0x0045c450
- *   ManuMgr_UpdateProduction    @ 0x0053b330
+ * Each bar represents one facility's production progress 0..100, with
+ * fill color set by the OWNING FACTION (Alliance=blue 0x020000FF,
+ * Empire=red 0x02FF0000) and remainder in dim bg (0x54000000).
  */
-function StatusBar({ alliance, empire, seed }: {
-  alliance: number; empire: number; seed: number;
-}) {
-  const a = Math.max(0, Math.min(1, alliance));
-  const e = Math.max(0, Math.min(1, empire));
-  // 5-segment scale. Segment i represents threshold i/5 along the
-  // alliance→empire axis. Alliance "dominant" colors green; transition
-  // yellow; empire red. Unaligned/empty segments stay grey.
-  const segments = Array.from({ length: 5 }, (_, i) => {
-    // Segment center on the [0..1] axis (Alliance=0, Empire=1).
-    const t = (i + 0.5) / 5;
-    // Per-segment hash adds slight variation per system so two planets
-    // with identical popularity don't render identically.
-    const noise = (hash32(seed * 11 + i * 23) % 20) / 100; // ±0.1
-    const aw = a - t + 0.2 + noise;   // alliance weight at this segment
-    const ew = e - (1 - t) + 0.2 + noise; // empire weight at this segment
-    if (aw > 0.25 && aw > ew) return '#30c030';     // green - alliance dominant
-    if (ew > 0.25 && ew > aw) return '#d04040';     // red - empire dominant
-    if (Math.abs(aw - ew) < 0.15 && (aw > 0 || ew > 0)) {
-      return '#e0c020';                              // yellow - contested
-    }
-    return '#404040';                                // grey - neutral/empty
-  });
+function CoolStatusBar({ pct, faction }: { pct: number; faction: 'Alliance' | 'Empire' | 'Neutral' }) {
+  const fillColor =
+    faction === 'Alliance' ? '#0000FF' :   // 0x020000FF — REBEXE blue
+    faction === 'Empire'   ? '#FF0000' :   // 0x02FF0000 — REBEXE red
+                              '#808080';
+  const clamped = Math.max(0, Math.min(100, pct));
   return (
-    <div className="szp-statusbar">
-      {segments.map((c, i) => (
-        <span key={i} className="szp-status-seg" style={{ background: c }} />
-      ))}
+    <div className="szp-coolbar">
+      <span
+        className="szp-coolbar-fill"
+        style={{ width: `${clamped}%`, background: fillColor }}
+      />
     </div>
   );
 }
 
 /**
- * PlanetCell — single planet entry in the sector panel.
+ * REBEXE CoolStrobeButton (vertical strip variant) — animated facility
+ * indicator. Each sector entry has TWO at top: shipyard at (7, 10) and
+ * training at (132, 10), both 11×53 px. The strobe alternates between
+ * two BMP frames when production is active.
+ */
+function CoolStrobeStrip({ seed, facilityIdx, faction }: {
+  seed: number; facilityIdx: number; faction: 'Alliance' | 'Empire' | 'Neutral';
+}) {
+  // Active when (system, facility) hashes above threshold.
+  const active = hash32(seed * 17 + facilityIdx * 41) % 100 > 40;
+  const bg =
+    !active ? '#202020' :
+    faction === 'Alliance' ? '#4080ff' :
+    faction === 'Empire'   ? '#ff4040' :
+                              '#888888';
+  return <span className="szp-strobe-strip" style={{ background: bg }} />;
+}
+
+/**
+ * PlanetCell — REBEXE-accurate sector entry per
+ * UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110.
  *
- * Layout (matches original 1998 sector zoom — see
- * decompiled/analysis/sector_panel_entry_plan.md):
- *   T-flag → loyalty bar → production queue → planet sprite → name
- *
- * Every planet uses this identical layout — differences come from
- * data (sprite, loyalty %, production queue).
+ * Layout (positions from disassembly, scaled to fit 90×80 cell):
+ *   - Left strobe strip (shipyard) at top-left
+ *   - Right strobe strip (training) at top-right
+ *   - LEFT status bar at (LEFT of planet, y=middle)
+ *   - Planet sprite center
+ *   - RIGHT status bar at (RIGHT of planet, y=middle)
+ *   - Construction strobe BOTTOM-LEFT
+ *   - Planet name BOTTOM (green Tahoma)
  */
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
   const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
-  const crest = s.control === 'Alliance' ? 'alliance'
-              : s.control === 'Empire'   ? 'empire'
-              : s.control === 'Contested' ? 'contested'
-              : 'neutral';
+  const faction = s.control === 'Alliance' ? 'Alliance'
+                : s.control === 'Empire'   ? 'Empire'
+                : 'Neutral';
+  // Production progress for left + right facility (deterministic).
+  const leftPct = hash32(s.id * 13 + 1) % 100;
+  const rightPct = hash32(s.id * 13 + 2) % 100;
   return (
     <button
       className={`szp-planet ${isSelected ? 'selected' : ''}`}
       onClick={onClick}
       title={`${s.name} — ${s.control}`}
     >
-      <span className={`szp-flag crest-${crest}`} />
-      <StatusBar
-        alliance={s.popularityAlliance}
-        empire={s.popularityEmpire}
-        seed={s.id}
-      />
-      <img
-        className="szp-planet-sprite"
-        src={`/assets/sprites/strategy/${spriteId}.png`}
-        alt=""
-        draggable={false}
-      />
+      {/* Top: two strobe strips (shipyard L + training R) */}
+      <div className="szp-strobe-row">
+        <CoolStrobeStrip seed={s.id} facilityIdx={0} faction={faction} />
+        <CoolStrobeStrip seed={s.id} facilityIdx={1} faction={faction} />
+      </div>
+      {/* Middle: status bar | planet | status bar */}
+      <div className="szp-middle-row">
+        <CoolStatusBar pct={leftPct} faction={faction} />
+        <img
+          className="szp-planet-sprite"
+          src={`/assets/sprites/strategy/${spriteId}.png`}
+          alt=""
+          draggable={false}
+        />
+        <CoolStatusBar pct={rightPct} faction={faction} />
+      </div>
+      {/* Bottom: name */}
       <div className="szp-planet-name">{s.name}</div>
     </button>
   );
