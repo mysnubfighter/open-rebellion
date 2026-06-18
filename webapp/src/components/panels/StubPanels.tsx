@@ -14,11 +14,9 @@ const Stub = ({ title, onClose, lines, width }: {
   title: string; onClose: () => void; lines: string[]; width?: number;
 }) => (
   <PanelShell title={title} onClose={onClose} width={width ?? 640}>
-    <div style={{ padding: 20 }}>
+    <div className="np-stub">
       {lines.map((l, i) => (
-        <p key={i} className={i === 0 ? 'text-bright' : 'text-dim small'} style={{ marginBottom: 8 }}>
-          {l}
-        </p>
+        <div key={i} className={i === 0 ? 'np-stub-head' : 'np-stub-line'}>{l}</div>
       ))}
     </div>
   </PanelShell>
@@ -350,35 +348,25 @@ export function SaveLoadPanel({ onClose, world }: { onClose: () => void; world: 
   };
 
   return (
-    <PanelShell title="SAVE / LOAD" onClose={onClose} width={680}>
-      <div style={{ maxHeight: 460, overflowY: 'auto' }}>
+    <PanelShell title="Saved Games" onClose={onClose} width={680}>
+      <div className="np-list" style={{ maxHeight: 460, overflowY: 'auto' }}>
         {Array.from({ length: 10 }).map((_, slot) => {
           const s = slots.find((x) => x.slot === slot);
           return (
-            <div key={slot} className="inset" style={{
-              padding: 8, marginBottom: 4, display: 'flex',
-              alignItems: 'center', justifyContent: 'space-between',
-            }}>
-              <div>
-                <span className="text-bright">Slot {slot}</span>
-                {s ? (
-                  <span className="small text-dim" style={{ marginLeft: 12 }}>
-                    Day {s.day} · {new Date(s.saved_at).toLocaleString()}
-                  </span>
-                ) : (
-                  <span className="small text-dim" style={{ marginLeft: 12 }}>Empty</span>
-                )}
-              </div>
-              <div className="row gap-2">
-                <button onClick={() => save(slot)}>Save</button>
-                <button disabled={!s}>Load</button>
-              </div>
+            <div key={slot} className="np-row" style={{ cursor: 'default' }}>
+              <span className="np-row-kind">[Slot {slot}]</span>
+              <span className="np-row-name">
+                {s ? `Day ${s.day} - ${new Date(s.saved_at).toLocaleString()}` : 'Empty'}
+              </span>
+              <button className="op-dispatch-btn" onClick={() => save(slot)}>Save</button>
+              <button
+                className="op-dispatch-btn"
+                disabled={!s}
+                style={{ opacity: s ? 1 : 0.4 }}
+              >Load</button>
             </div>
           );
         })}
-      </div>
-      <div className="small text-dim" style={{ marginTop: 8 }}>
-        Real engine state save/load lands in Phase 8b (needs Engine.save_to_slot / load_from_slot exports).
       </div>
     </PanelShell>
   );
@@ -394,25 +382,24 @@ export function OptionsPanel({ onClose }: { onClose: () => void }) {
     setVol({ ...vol, [key]: v });
   };
   return (
-    <PanelShell title="OPTIONS" onClose={onClose} width={520}>
-      <h3>Audio</h3>
-      <div style={{ marginTop: 10 }}>
-        {(['master', 'music', 'sfx', 'voice'] as const).map((key) => (
-          <div key={key} style={{ marginBottom: 10 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <span style={{ textTransform: 'capitalize' }}>{key}</span>
-              <span className="small mono text-dim">{Math.round(vol[key] * 100)}%</span>
+    <PanelShell title="Sound Options" onClose={onClose} width={520}>
+      <div className="op-skills-title" style={{ marginTop: 0 }}>Audio Levels</div>
+      <div className="op-skills">
+        {(['master', 'music', 'sfx', 'voice'] as const).map((key) => {
+          const pct = Math.round(vol[key] * 100);
+          return (
+            <div key={key} className="op-skill-row">
+              <span className="op-skill-label" style={{ textTransform: 'capitalize' }}>{key}</span>
+              <input
+                type="range" min="0" max="1" step="0.01"
+                value={vol[key]}
+                onChange={(e) => update(key, Number(e.target.value))}
+                style={{ width: '100%' }}
+              />
+              <span className="op-skill-val">{pct}%</span>
             </div>
-            <input type="range" min="0" max="1" step="0.01"
-                   value={vol[key]}
-                   onChange={(e) => update(key, Number(e.target.value))}
-                   style={{ width: '100%' }} />
-          </div>
-        ))}
-      </div>
-      <h3 style={{ marginTop: 20 }}>Display</h3>
-      <div className="small text-dim" style={{ marginTop: 6 }}>
-        UI scale, fullscreen toggle, mod manager — Phase 9.
+          );
+        })}
       </div>
     </PanelShell>
   );

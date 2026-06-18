@@ -348,6 +348,28 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
   background: #FFFFFF;
   border-color: #FFFFFF;
 }
+.op-dispatch-btn:disabled {
+  background: #3A416C;
+  color: #80FFFF;
+  cursor: not-allowed;
+}
+
+/* Native stub panel — placeholder content while engine commands ship */
+.np-stub {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #00FFFF;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+}
+.np-stub-head {
+  color: #FFFFFF;
+  font-weight: bold;
+  font-size: 13px;
+}
+.np-stub-line { color: #00FFFF; }
 
 /* Inset frame — used for content areas inside panels */
 .inset {
