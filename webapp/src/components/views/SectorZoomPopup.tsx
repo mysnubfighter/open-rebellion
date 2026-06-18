@@ -258,6 +258,15 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
 
   return (
     <div className={`sector-zoom-popup${secondary ? ' sector-zoom-popup--secondary' : ''}`}>
+      {/* slide_15-confirmed native chrome: STRATEGY.DLL 11100 (single
+          sector zoom) -- a 259x355 BMP with starfield body + space frame.
+          BMP background sits behind everything; header + planets overlay. */}
+      <img
+        className="szp-bg-native"
+        src="/assets/panels/strategy/11100.png"
+        alt=""
+        draggable={false}
+      />
       <div className="szp-header">
         <span className="szp-title">{sectorName}</span>
         <span className="szp-speed">4x</span>
