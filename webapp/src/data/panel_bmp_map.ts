@@ -11,6 +11,7 @@ import insets from './panel_insets.json';
 export type PanelBmpId =
   | 'common/10100' | 'common/10101' | 'common/10102' | 'common/10103'
   | 'common/20001' | 'common/20002'
+  | 'strategy/11100' | 'strategy/11101'
   | 'strategy/11165' | 'strategy/11554' | 'strategy/11555' | 'strategy/11556'
   | 'strategy/11557' | 'strategy/11558' | 'strategy/11559'
   | 'tactical/1000'
@@ -41,6 +42,7 @@ export const PANEL_BMP_MAP: Record<PanelKey, PanelBmpId> = {
   options:      'common/20002',
   'galaxy-overview': 'strategy/11556',
   objectives:   'common/10103',
+  'entity-editor': 'strategy/11100',  // dual-pane editor uses inner pane BMPs directly
 };
 
 export interface PanelInset {

@@ -33,6 +33,7 @@ import {
   LoyaltyPanel, EncyclopediaPanel, MessagesPanel, SaveLoadPanel, OptionsPanel,
 } from './components/panels/StubPanels';
 import { PanelShell } from './components/panels/PanelShell';
+import { EntityEditorPanel } from './components/panels/EntityEditorPanel';
 import type { Faction, MissionKind } from './types/game';
 
 export function App() {
@@ -314,6 +315,18 @@ export function App() {
       case 'options':
         // Slide 8: one composite modal w/ Save Games + Sound + Tactical
         return <GameOptionsPanel onClose={() => setActivePanel(null)} />;
+      case 'entity-editor':
+        // Native dual-pane editor (UIPanel_Init_WithGDI_0046a9c0).
+        // Uses the actual REBEXE BMPs from STRATEGY.DLL.
+        return (
+          <EntityEditorPanel
+            faction={playerFaction}
+            entityType={1}
+            characterPortraitId={characters.find((c) => c.faction === playerFaction && c.isMajor)?.id != null ? 2112 : undefined}
+            characterName={characters.find((c) => c.faction === playerFaction && c.isMajor)?.name}
+            onClose={() => setActivePanel(null)}
+          />
+        );
       case 'galaxy':
       default:
         return null;
@@ -499,7 +512,8 @@ export function App() {
               setActivePanel('garrisons');
               break;
             case 'translate-counterpart':
-              setActivePanel(null);
+              // Use native dual-pane editor (REBEXE UIPanel_Init_WithGDI)
+              setActivePanel('entity-editor');
               break;
             case 'agent-advice':
               setAdvisorQueue((q) => [

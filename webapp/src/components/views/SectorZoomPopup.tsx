@@ -258,15 +258,13 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
 
   return (
     <div className={`sector-zoom-popup${secondary ? ' sector-zoom-popup--secondary' : ''}`}>
-      {/* slide_15-confirmed native chrome: STRATEGY.DLL 11100 (single
-          sector zoom) -- a 259x355 BMP with starfield body + space frame.
-          BMP background sits behind everything; header + planets overlay. */}
-      <img
-        className="szp-bg-native"
-        src="/assets/panels/strategy/11100.png"
-        alt=""
-        draggable={false}
-      />
+      {/* RETRACTION: 11100/11101 are NOT the sector zoom panel chrome.
+          Per decompiled/functions/FUN_0045f660.c they're slots 1+2 in
+          UIWnd_MapEntityTypeToPanel - a 26-entry table mapping entity
+          type to inner-pane BMP for the dual-pane UIPanel_Init_WithGDI
+          editor (0x0046a9c0). The actual REBEXE sector zoom function
+          remains unidentified. See panel_native_implementation_plan.md
+          Pass 4+ in sector_entry_rebexe_eval.md. */}
       <div className="szp-header">
         <span className="szp-title">{sectorName}</span>
         <span className="szp-speed">4x</span>
