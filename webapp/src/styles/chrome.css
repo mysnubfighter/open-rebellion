@@ -696,11 +696,14 @@
   background: transparent;
   border-bottom: none;
 }
+/* slide_04 native: sector name in YELLOW/GOLD over dim background
+   (sampled #FFFF40 from reference/_slide04_popup_title.png). */
 .sector-zoom-popup .szp-title {
-  color: #80ff80;
+  color: #FFFF40;
   font-weight: bold;
   letter-spacing: 0.5px;
   font-family: 'Tahoma', sans-serif;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
 }
 .sector-zoom-popup .szp-resize,
 .sector-zoom-popup .szp-close {
@@ -1042,22 +1045,25 @@
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* slide_06: thin dark titlebar with green system name + small X. No
-   gradient, no glow — flat 1998 styling. */
+/* slide_06 native: SOLID GREEN title bar with BLACK text. Sampled
+   from the original game's right pane (Coruscant Personnel) — the
+   header is NOT dark with green text; it's a green bar like a Win95
+   active title bar. */
 .system-detail-card .sdc-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 2px 6px 2px 8px;
-  background: #0a0a14;
-  border-bottom: 1px solid #404040;
+  background: #00C800;
+  border-bottom: 1px solid #008000;
 }
 .system-detail-card .sdc-name {
-  font-size: 12px;
-  font-weight: normal;
-  letter-spacing: 0.5px;
-  color: #80ff80;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  color: #000000;
   font-family: 'Tahoma', sans-serif;
+  text-shadow: none;
 }
 .system-detail-card .sdc-close {
   background: #c0c0c0;
@@ -1074,28 +1080,35 @@
   background: #d8d8d8;
 }
 
-/* slide_06: a single highlighted "Personnel" tab below the title bar. */
+/* slide_06 native: 4 ICON tabs below the green title bar — Personnel
+   (officer portrait), Garrisons (stormtrooper trio), Defenses
+   (TIE fighter), Fleet (combat scene). Currently we keep text labels
+   inside the tab slot since the exact tab BMP IDs are not yet wired,
+   but we style them to match the native dark-blue tab strip with the
+   active tab raised above the others. */
 .system-detail-card .sdc-tabs {
   display: flex;
-  background: #1a1a1a;
+  background: #2a3050;
   border-bottom: 1px solid #404040;
-  padding: 2px 6px 0;
-  gap: 4px;
+  padding: 2px 4px 0;
+  gap: 2px;
 }
 .system-detail-card .sdc-tab {
-  padding: 3px 12px;
+  padding: 3px 10px;
   font-family: 'Tahoma', sans-serif;
   font-size: 11px;
-  color: #707070;
-  border: 1px solid transparent;
+  color: #c0c0c0;
+  background: #1a1f40;
+  border: 1px solid #404858;
+  border-bottom: none;
   cursor: pointer;
 }
-.system-detail-card .sdc-tab:hover { color: #c0c0c0; }
+.system-detail-card .sdc-tab:hover { color: #ffffff; }
 .system-detail-card .sdc-tab--active {
-  color: #80ff80;
-  background: #0a0a14;
-  border-color: #404040 #404040 transparent #404040;
-  border-radius: 0;
+  color: #FFFFFF;
+  background: #4080FF;
+  border-color: #80B0FF;
+  font-weight: bold;
 }
 
 /* slide_06: 2-column grid of square portrait + caption. Background of

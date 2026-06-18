@@ -102,15 +102,11 @@ export function SystemDetailCard({ system, characters, onClose }: Props) {
         )}
       </div>
 
-      {resources && (
-        <div className="sdc-resources" data-testid="sdc-resources">
-          <span title="Raw Materials">RM {resources.rawMaterials}</span>
-          <span title="Refined Materials">RF {resources.refinedMaterials}</span>
-          <span title="Energy">EN {resources.energy}</span>
-          <span title="Maintenance Points">MN {resources.maintenancePoints}</span>
-          {resources.blockaded && <span className="sdc-blockaded">BLOCKADED</span>}
-        </div>
-      )}
+      {/* slide_06 / slide_09 native: NO resource summary bar at the bottom.
+          The earlier RM/RF/EN/MN strip was my addition — the original game
+          shows resource values inside the Personnel/Fleet content area or
+          via a separate Galaxy Overview panel, not pinned to the right
+          pane. Removed for parity. */}
     </div>
   );
 }

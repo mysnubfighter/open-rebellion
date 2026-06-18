@@ -117,25 +117,16 @@ export function CockpitFrame({
             Planet thumbnails for a sector appear only inside the monitor
             via SectorZoomPopup when a system is selected. */}
 
-        {/* RIGHT COLUMN: 10 navigation buttons. slide_04 reference shows
-            small text labels on the silver bars, not chunky icons (chunky
-            character portraits were my own flare). Falls back to icons
-            only when the user clicks (title attr still shows the panel
-            name for hover). */}
-        <div className="cockpit-buttons-right">
-          {RIGHT_BUTTONS.map((b) => {
-            return (
-              <button
-                key={b.key}
-                className={`cockpit-btn cockpit-btn--text ${activePanel === b.key ? 'active' : ''}`}
-                onClick={() => onPanel(b.key)}
-                title={b.key}
-              >
-                <span className="btn-content">{b.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* RIGHT COLUMN: REMOVED — the native chrome's right column is
+            EMPTY metal bars. The earlier OFF/FLT/MFG/MSN/RES/JED/LOY/
+            ENC/SAV/OPT text-button stack was my invention, not native.
+            Panel access is via:
+              1. Bottom strip BMP buttons (cockpit-bottom-hotspot, below)
+              2. Right-click context menu on systems (SystemContextMenu)
+            See reference/_chrome_right_column.png + slide_01_bottom.png
+            for verification. */}
+        {/* Keep RIGHT_BUTTONS for runtime panel-key routing only */}
+        {void RIGHT_BUTTONS}
 
         {/* Bottom-panel CLICK HOTSPOTS — invisible overlays that make the chrome's
              baked-in bottom display windows interactive */}
