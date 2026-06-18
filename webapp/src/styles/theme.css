@@ -136,12 +136,28 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
     inset -1px -1px 0 var(--chrome);
 }
 
-/* Modal overlay */
+/* Modal overlay — positioned to overlay the cockpit monitor area
+   (slide_07: panels fill the monitor, NOT a floating centered modal).
+   The cockpit-monitor occupies left:8.4% top:7.3% right:15.5% bottom:15.8%
+   of the cockpit-frame. The backdrop is transparent so the cockpit chrome
+   stays fully visible; the .panel positions itself absolutely inside the
+   backdrop using the same coordinates. */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0, 0, 0, 0.65);
-  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  pointer-events: none;
   z-index: 100;
+}
+.modal-backdrop > .panel {
+  position: absolute !important;
+  left: 8.4% !important;
+  top: 7.3% !important;
+  right: 15.5% !important;
+  bottom: 15.8% !important;
+  width: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  pointer-events: auto;
 }
 
 /* Util */
