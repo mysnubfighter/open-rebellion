@@ -13,7 +13,8 @@ import type { Faction, WorldState, ActiveMission, StarSystem } from '../../types
 export type PanelKey =
   | 'galaxy' | 'officers' | 'fleets' | 'manufacture' | 'missions'
   | 'research' | 'jedi' | 'bombardment' | 'deathstar' | 'loyalty'
-  | 'encyclopedia' | 'saveload' | 'messages' | 'options';
+  | 'encyclopedia' | 'saveload' | 'messages' | 'options'
+  | 'garrisons' | 'objectives' | 'galaxy-overview';
 
 export type GameSpeed = 'paused' | '1x' | '2x' | '4x';
 

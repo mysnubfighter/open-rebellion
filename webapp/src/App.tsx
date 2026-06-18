@@ -24,6 +24,7 @@ import { AudioBus } from './audio/AudioEngine';
 import { OfficersPanel } from './components/panels/OfficersPanel';
 import { FleetsPanel } from './components/panels/FleetsPanel';
 import { ManufacturePanel } from './components/panels/ManufacturePanel';
+import { GarrisonsPanel } from './components/panels/GarrisonsPanel';
 import { MissionsPanel } from './components/panels/MissionsPanel';
 import { ProfileManager } from './components/ProfileManager';
 import { MissionPlanner } from './components/MissionPlanner';
@@ -276,6 +277,8 @@ export function App() {
         return <FleetsPanel systems={systems} characters={characters} playerFaction={playerFaction} onClose={() => setActivePanel(null)} />;
       case 'manufacture':
         return <ManufacturePanel systems={systems} playerFaction={playerFaction} onClose={() => setActivePanel(null)} />;
+      case 'garrisons':
+        return <GarrisonsPanel systems={systems} playerFaction={playerFaction} onClose={() => setActivePanel(null)} />;
       case 'missions':
         return <MissionsPanel missions={missions} world={world} onClose={() => setActivePanel(null)} />;
       case 'research':
@@ -406,9 +409,11 @@ export function App() {
                   switch (action) {
                     case 'open-shipyard':
                     case 'open-fighters':
+                      setActivePanel('manufacture');
+                      break;
                     case 'open-training':
                     case 'open-defense':
-                      setActivePanel('manufacture');
+                      setActivePanel('garrisons');
                       break;
                     case 'open-loyalty':
                     case 'open-support':
@@ -491,7 +496,7 @@ export function App() {
               setActivePanel('encyclopedia');
               break;
             case 'manage-garrisons':
-              setActivePanel('fleets');
+              setActivePanel('garrisons');
               break;
             case 'translate-counterpart':
               setActivePanel(null);
