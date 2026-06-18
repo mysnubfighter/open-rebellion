@@ -241,6 +241,114 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
   background: #FFFFFF;
 }
 
+/* OfficersPanel — native portrait + skill grid. */
+.op-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 8px;
+  min-height: 360px;
+}
+.op-detail {
+  padding: 8px;
+  border: 1px solid #3A416C;
+  background: #1A1F4A;
+}
+.op-portrait-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.op-portrait,
+.op-portrait-placeholder {
+  width: 80px;
+  height: 80px;
+  background: #0A0A2A;
+  border: 1px solid #3A416C;
+  object-fit: cover;
+  image-rendering: pixelated;
+  flex: 0 0 80px;
+}
+.op-portrait-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00FFFF;
+  font-size: 28px;
+}
+.op-portrait-meta { color: #00FFFF; }
+.op-name {
+  color: #FFFFFF;
+  font-weight: bold;
+  font-size: 14px;
+}
+.op-sub { color: #00FFFF; font-size: 12px; }
+.op-skills-title {
+  color: #FFFFFF;
+  font-weight: bold;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  border-bottom: 1px solid #3A416C;
+}
+.op-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.op-skill-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 36px;
+  gap: 6px;
+  align-items: center;
+}
+.op-skill-label { color: #00FFFF; font-size: 12px; }
+.op-skill-bar {
+  height: 6px;
+  background: #0A0A2A;
+  border: 1px solid #1A1F40;
+}
+.op-skill-fill {
+  display: block;
+  height: 100%;
+  background: #00FF00;
+}
+.op-skill-val {
+  color: #FFFFFF;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+  text-align: right;
+}
+.op-dispatch {
+  margin-top: 12px;
+}
+.op-dispatch-row {
+  display: flex;
+  gap: 6px;
+}
+.op-select {
+  background: #0A0A2A;
+  color: #00FFFF;
+  border: 1px solid #3A416C;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+.op-dispatch-btn {
+  background: #00FF00;
+  color: #18149F;
+  border: 1px solid #00FF00;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+.op-dispatch-btn:hover {
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+}
+
 /* Inset frame — used for content areas inside panels */
 .inset {
   background: var(--bg-deep);

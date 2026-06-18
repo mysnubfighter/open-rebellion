@@ -25,74 +25,76 @@ const Stub = ({ title, onClose, lines, width }: {
 );
 
 // ── RESEARCH ────────────────────────────────────────────────
-const TREE_COLORS: Record<string, string> = {
-  Ship: '#5fa8dc', Troop: '#4ca44a', Facility: '#c8a448',
-};
-
 export function ResearchPanel({ onClose, characters }: { onClose: () => void; playerFaction: Faction; characters: Character[] }) {
   const [projects, setProjects] = useState<ResearchProject[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   useEffect(() => { Engine.getResearch().then(setProjects); }, []);
   const charName = (id: number) => characters.find((c) => c.id === id)?.name ?? `#${id}`;
   return (
-    <PanelShell title="RESEARCH & DEVELOPMENT" onClose={onClose} width={720}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-        {projects.map((p) => (
-          <div key={p.tree} className="inset" style={{ padding: 12 }}>
-            <h3 style={{ color: TREE_COLORS[p.tree] }}>{p.tree} Tree</h3>
-            <div className="small text-dim" style={{ marginTop: 4 }}>Level {p.currentLevel}</div>
-            <div style={{ marginTop: 8, height: 8, background: 'var(--bg-deep)', border: '1px solid var(--chrome-lo)' }}>
-              <div style={{
-                height: '100%', width: `${p.progressPct * 100}%`,
-                background: TREE_COLORS[p.tree],
-              }} />
+    <PanelShell title="Research &amp; Development" onClose={onClose} width={720}>
+      <div className="np-list">
+        {projects.map((p) => {
+          const isActive = activeId === p.tree;
+          const pct = Math.round(p.progressPct * 100);
+          return (
+            <div key={p.tree} className="np-system-block">
+              <div className="np-system-name">{p.tree} Tree - Level {p.currentLevel}</div>
+              <button
+                className={`np-row${isActive ? ' np-row--active' : ''}`}
+                onClick={() => setActiveId(p.tree)}
+              >
+                <span className="np-row-kind">[{p.tree}]</span>
+                <span className="np-row-name">
+                  {p.assignedCharacterIds.length === 0
+                    ? 'No researchers assigned'
+                    : p.assignedCharacterIds.map(charName).join(', ')}
+                </span>
+                <span className="np-row-pct">{pct}%</span>
+                <span className="np-row-days">L{p.currentLevel}</span>
+                <div className="np-row-bar">
+                  <span className="np-row-bar-fill" style={{ width: `${pct}%` }} />
+                </div>
+              </button>
             </div>
-            <div className="tiny text-dim" style={{ marginTop: 3 }}>{Math.round(p.progressPct * 100)}% to next level</div>
-            <h4 style={{ marginTop: 12 }}>Researchers</h4>
-            {p.assignedCharacterIds.length === 0 ? (
-              <div className="tiny text-dim">No one assigned.</div>
-            ) : p.assignedCharacterIds.map((id) => (
-              <div key={id} className="small">{charName(id)}</div>
-            ))}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </PanelShell>
   );
 }
 
 // ── JEDI ────────────────────────────────────────────────────
-const TIER_COLORS: Record<string, string> = {
-  None: '#5a5a5a', Aware: '#7a8aaa', Training: '#c8a448', Experienced: '#9050d0',
-};
-
 export function JediPanel({ onClose }: { onClose: () => void; characters: Character[]; playerFaction: Faction }) {
   const [jedi, setJedi] = useState<JediCandidate[]>([]);
+  const [activeId, setActiveId] = useState<number | null>(null);
   useEffect(() => { Engine.getJedi().then(setJedi); }, []);
   return (
-    <PanelShell title="JEDI ORDER" onClose={onClose} width={680}>
+    <PanelShell title="Jedi Order" onClose={onClose} width={680}>
       {jedi.length === 0 ? (
-        <div className="text-dim center" style={{ padding: 30 }}>No Force-sensitives detected.</div>
+        <div className="np-empty">No Force-sensitives detected.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {jedi.map((j) => (
-            <div key={j.characterId} className="inset" style={{ padding: 10 }}>
-              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <h4 style={{ color: TIER_COLORS[j.tier] }}>{j.characterName}</h4>
-                  <div className="small text-dim">Tier: {j.tier}{j.isTraining && ' · currently in training'}</div>
+        <div className="np-list">
+          {jedi.map((j) => {
+            const isActive = activeId === j.characterId;
+            const pct = Math.round(j.xpPct * 100);
+            return (
+              <button
+                key={j.characterId}
+                className={`np-row${isActive ? ' np-row--active' : ''}`}
+                onClick={() => setActiveId(j.characterId)}
+              >
+                <span className="np-row-kind">[{j.tier}]</span>
+                <span className="np-row-name">
+                  {j.characterName}{j.isTraining ? ' - in training' : ''}
+                </span>
+                <span className="np-row-pct">{pct}%</span>
+                <span className="np-row-days">XP</span>
+                <div className="np-row-bar">
+                  <span className="np-row-bar-fill" style={{ width: `${pct}%` }} />
                 </div>
-                <button disabled={j.isTraining || j.tier === 'Experienced'}>
-                  {j.tier === 'Experienced' ? 'Mastered' : j.isTraining ? 'Training' : 'Begin Training'}
-                </button>
-              </div>
-              <div style={{ marginTop: 6, height: 6, background: 'var(--bg-deep)', border: '1px solid var(--chrome-lo)' }}>
-                <div style={{
-                  height: '100%', width: `${j.xpPct * 100}%`,
-                  background: TIER_COLORS[j.tier],
-                }} />
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
     </PanelShell>
@@ -193,67 +195,62 @@ export function LoyaltyPanel({ onClose, playerFaction }: { onClose: () => void; 
   );
 }
 
-// ── ENCYCLOPEDIA ────────────────────────────────────────────
+// ── ENCYCLOPEDIA / OBJECTIVES ────────────────────────────────
 export function EncyclopediaPanel({ onClose, characters, systems }: { onClose: () => void; characters: Character[]; systems: StarSystem[] }) {
   const [tab, setTab] = useState<'characters' | 'systems'>('characters');
+  const [activeId, setActiveId] = useState<string | null>(null);
   return (
-    <PanelShell title="GALACTIC ENCYCLOPEDIA" onClose={onClose} width={820}>
-      <div className="row gap-2" style={{ borderBottom: '1px solid var(--chrome-lo)', marginBottom: 10 }}>
-        <button style={{ borderBottom: tab === 'characters' ? '2px solid var(--accent)' : 'none' }}
-                onClick={() => setTab('characters')}>Characters ({characters.length})</button>
-        <button style={{ borderBottom: tab === 'systems' ? '2px solid var(--accent)' : 'none' }}
-                onClick={() => setTab('systems')}>Systems ({systems.length})</button>
+    <PanelShell title="Galactic Encyclopedia" onClose={onClose} width={820}>
+      <div className="np-toolbar">
+        <button
+          className={`np-tab${tab === 'characters' ? ' np-tab--active' : ''}`}
+          onClick={() => setTab('characters')}
+        >Characters ({characters.length})</button>
+        <button
+          className={`np-tab${tab === 'systems' ? ' np-tab--active' : ''}`}
+          onClick={() => setTab('systems')}
+        >Systems ({systems.length})</button>
       </div>
-      <div style={{ maxHeight: 460, overflowY: 'auto' }}>
-        {tab === 'characters' ? (
-          <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--chrome)' }}>
-                <th style={{ textAlign: 'left', padding: 4 }}>Name</th>
-                <th style={{ textAlign: 'left', padding: 4 }}>Faction</th>
-                <th style={{ textAlign: 'left', padding: 4 }}>Type</th>
-                <th style={{ textAlign: 'right', padding: 4 }}>Combat</th>
-                <th style={{ textAlign: 'right', padding: 4 }}>Diplomacy</th>
-                <th style={{ textAlign: 'right', padding: 4 }}>Espionage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {characters.map((c) => (
-                <tr key={c.id} style={{ borderBottom: '1px solid var(--chrome-lo)' }}>
-                  <td style={{ padding: 4 }} className="text-bright">{c.name}</td>
-                  <td style={{ padding: 4, color: c.faction === 'Alliance' ? '#5fa8dc' : '#dc5f3a' }}>{c.faction}</td>
-                  <td style={{ padding: 4 }} className="text-dim">{c.isMajor ? 'Major' : 'Minor'}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 4 }}>{c.combat.base}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 4 }}>{c.diplomacy.base}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 4 }}>{c.espionage.base}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ color: 'var(--text-dim)', borderBottom: '1px solid var(--chrome)' }}>
-                <th style={{ textAlign: 'left', padding: 4 }}>System</th>
-                <th style={{ textAlign: 'left', padding: 4 }}>Sector</th>
-                <th style={{ textAlign: 'left', padding: 4 }}>Control</th>
-                <th style={{ textAlign: 'right', padding: 4 }}>Alliance %</th>
-                <th style={{ textAlign: 'right', padding: 4 }}>Empire %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {systems.map((s) => (
-                <tr key={s.id} style={{ borderBottom: '1px solid var(--chrome-lo)' }}>
-                  <td style={{ padding: 4 }} className="text-bright">{s.name}</td>
-                  <td style={{ padding: 4 }} className="text-dim">{s.sectorId}</td>
-                  <td style={{ padding: 4 }}>{s.control}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 4 }}>{Math.round(s.popularityAlliance * 100)}</td>
-                  <td className="mono" style={{ textAlign: 'right', padding: 4 }}>{Math.round(s.popularityEmpire * 100)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      <div className="np-list" style={{ maxHeight: 460, overflowY: 'auto' }}>
+        {tab === 'characters' ? characters.map((c) => {
+          const id = `char-${c.id}`;
+          const isActive = activeId === id;
+          return (
+            <button
+              key={c.id}
+              className={`np-row${isActive ? ' np-row--active' : ''}`}
+              onClick={() => setActiveId(id)}
+            >
+              <span className="np-row-kind">[{c.faction}]</span>
+              <span className="np-row-name">{c.name} - {c.isMajor ? 'Major' : 'Minor'}</span>
+              <span className="np-row-pct">C:{c.combat.base}</span>
+              <span className="np-row-days">D:{c.diplomacy.base}</span>
+              <div className="np-row-bar">
+                <span className="np-row-bar-fill" style={{ width: `${Math.min(100, c.combat.base / 2)}%` }} />
+              </div>
+            </button>
+          );
+        }) : systems.map((s) => {
+          const id = `sys-${s.id}`;
+          const isActive = activeId === id;
+          const a = Math.round(s.popularityAlliance * 100);
+          const e = Math.round(s.popularityEmpire * 100);
+          return (
+            <button
+              key={s.id}
+              className={`np-row${isActive ? ' np-row--active' : ''}`}
+              onClick={() => setActiveId(id)}
+            >
+              <span className="np-row-kind">[{s.control}]</span>
+              <span className="np-row-name">{s.name} (S{s.sectorId})</span>
+              <span className="np-row-pct">A:{a}%</span>
+              <span className="np-row-days">E:{e}%</span>
+              <div className="np-row-bar">
+                <span className="np-row-bar-fill" style={{ width: `${Math.max(a, e)}%` }} />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </PanelShell>
   );
@@ -261,29 +258,51 @@ export function EncyclopediaPanel({ onClose, characters, systems }: { onClose: (
 
 // ── MESSAGE LOG ─────────────────────────────────────────────
 export function MessagesPanel({ onClose, world }: { onClose: () => void; world?: WorldState }) {
-  // Placeholder events until Engine.getEvents() exists
+  const [filter, setFilter] = useState<'all' | 'system' | 'diplomatic' | 'military' | 'intel'>('all');
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const events = [
-    { tick: world?.currentDay ?? 0, cat: 'system',   text: 'Game loaded — engine ready.' },
+    { tick: world?.currentDay ?? 0, cat: 'system',   text: 'Game loaded - engine ready.' },
     { tick: (world?.currentDay ?? 0) - 4, cat: 'diplomatic', text: 'Mon Mothma reports favorable conditions on Hoth.' },
     { tick: (world?.currentDay ?? 0) - 8, cat: 'military',   text: 'Imperial fleet detected near Bilbringi.' },
     { tick: (world?.currentDay ?? 0) - 12, cat: 'intel',     text: 'Espionage report: Death Star construction at 60%.' },
   ];
-  const colors: Record<string, string> = {
-    system: '#cfd4dc', diplomatic: '#5fa8dc', military: '#dc5f3a',
-    intel: '#4ca44a', alert: '#d49810',
-  };
+  const FILTERS: { key: typeof filter; label: string }[] = [
+    { key: 'all',        label: 'All' },
+    { key: 'system',     label: 'System' },
+    { key: 'diplomatic', label: 'Diplomatic' },
+    { key: 'military',   label: 'Military' },
+    { key: 'intel',      label: 'Intel' },
+  ];
+  const filtered = filter === 'all' ? events : events.filter((e) => e.cat === filter);
   return (
-    <PanelShell title="MESSAGE LOG" onClose={onClose} width={680}>
-      <div style={{ maxHeight: 460, overflowY: 'auto' }}>
-        {events.map((e, i) => (
-          <div key={i} className="inset" style={{ padding: 6, marginBottom: 4 }}>
-            <span className="mono small text-dim">Day {e.tick}</span>
-            <span style={{ color: colors[e.cat] ?? 'var(--text)', marginLeft: 8, fontSize: 9, textTransform: 'uppercase' }}>
-              [{e.cat}]
-            </span>
-            <div className="small text-bright" style={{ marginTop: 2 }}>{e.text}</div>
-          </div>
+    <PanelShell title="Message Index" onClose={onClose} width={680}>
+      <div className="np-toolbar">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            className={`np-tab${filter === f.key ? ' np-tab--active' : ''}`}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label}
+          </button>
         ))}
+      </div>
+      <div className="np-list" style={{ maxHeight: 460, overflowY: 'auto' }}>
+        {filtered.map((e, i) => {
+          const isActive = activeIdx === i;
+          return (
+            <button
+              key={i}
+              className={`np-row${isActive ? ' np-row--active' : ''}`}
+              onClick={() => setActiveIdx(i)}
+            >
+              <span className="np-row-kind">[{e.cat}]</span>
+              <span className="np-row-name">{e.text}</span>
+              <span className="np-row-pct">D{e.tick}</span>
+              <span className="np-row-days">—</span>
+            </button>
+          );
+        })}
       </div>
     </PanelShell>
   );
