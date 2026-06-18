@@ -776,6 +776,16 @@
 /* Original 1998 sector entry: vertical stack of T-flag, loyalty bar,
    production queue, planet sprite, green name. No left sidebar — every
    planet uses this exact layout. See decompiled/analysis/sector_panel_entry_plan.md */
+/*
+ * slide_04 itemized cell — 9 elements per
+ * decompiled/analysis/sector_entry_rebexe_eval.md Pass 5.
+ *
+ * Order top-to-bottom inside the cell button:
+ *   sprite-wrap     — planet sprite + 4 facility icons at corners + optional selection cross
+ *   support-bar     — multi-tick yellow/white/orange popular-support widget
+ *   loyalty-bar     — green Alliance + red Empire + small blue end tab
+ *   planet-name     — green Tahoma text
+ */
 .sector-zoom-popup .szp-planet {
   display: flex;
   flex-direction: column;
@@ -790,41 +800,6 @@
   outline: none;
   min-height: 0;
 }
-/* slide_04 faithful: single thin loyalty bar above the planet.
-   Colors decoded from REBEXE PALETTERGB:
-     bg #0000FF = PALETTERGB(0,0,255) = REBEXE 0x02FF0000
-     fg #FF0000 = PALETTERGB(255,0,0) = REBEXE 0x020000FF
-   The bar grows red from 0..100% as Empire popularity dominates. */
-.sector-zoom-popup .szp-loyalty-bar {
-  width: 42px;
-  height: 4px;
-  background: #0000FF;
-  border: 1px solid #000;
-  margin-bottom: 1px;
-  overflow: hidden;
-}
-.sector-zoom-popup .szp-loyalty-fill {
-  display: block;
-  height: 100%;
-  background: #FF0000;
-}
-
-/* slide_04 close-up: small T-shaped flag pole above the planet photo.
-   The horizontal cap is the faction's flag color; the vertical pole is
-   a thin white line. */
-.sector-zoom-popup .szp-flag {
-  width: 7px;
-  height: 5px;
-  border-top: 2px solid currentColor;
-  border-left: 1px solid #c0c0c0;
-  margin-left: -8px;  /* aligns over upper-left of planet */
-  align-self: flex-start;
-  color: #c0c0c0;
-}
-.sector-zoom-popup .szp-flag.crest-alliance { color: #4080ff; }
-.sector-zoom-popup .szp-flag.crest-empire   { color: #ff4040; }
-.sector-zoom-popup .szp-flag.crest-contested { color: #ffd040; }
-.sector-zoom-popup .szp-flag.crest-neutral  { color: #80c080; }
 .sector-zoom-popup .szp-planet:hover {
   border-color: rgba(120, 200, 255, 0.4);
   background: rgba(40, 80, 120, 0.25);
@@ -833,14 +808,111 @@
   border-color: #80ff80;
   background: rgba(20, 80, 20, 0.3);
 }
-/* slide_04: planet photo native is 37x37 (STRATEGY.DLL 10212-40).
-   Render at 1:1 native size to preserve crispness — upscaling adds
-   blur even with pixelated rendering. */
+
+/* Sprite + 4 facility icons live in a relatively-positioned container
+   so the icons can be absolutely placed at each corner of the sprite. */
+.sector-zoom-popup .szp-sprite-wrap {
+  position: relative;
+  width: 56px;   /* sprite 37 + 9 padding on each side for icons */
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .sector-zoom-popup .szp-planet-sprite {
   width: 37px; height: 37px;
   image-rendering: pixelated;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
+
+/* 4 facility icons flanking the sprite at corners.
+   BMP IDs per decompiled/analysis/sector_entry_rebexe_eval.md Pass 5:
+     11531 = shipyard, 11537 = fighter, 11534 = training, 11540 = defense
+   Native dims 12×12 for 11531/11534/11537/11540. */
+.sector-zoom-popup .szp-fi {
+  position: absolute;
+  width: 12px; height: 12px;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.sector-zoom-popup .szp-fi-tl { top: 1px;  left: 0; }
+.sector-zoom-popup .szp-fi-tr { top: 1px;  right: 0; }
+.sector-zoom-popup .szp-fi-bl { bottom: 4px; left: 0; }
+.sector-zoom-popup .szp-fi-br { bottom: 4px; right: 0; }
+
+/* Selection crosshair (STRATEGY.DLL 10153, native 15×15).
+   Overlays the planet sprite when selected. */
+.sector-zoom-popup .szp-selection-cross {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 21px; height: 21px;
+  transform: translate(-50%, -50%);
+  image-rendering: pixelated;
+  pointer-events: none;
+  filter: drop-shadow(0 0 2px rgba(0, 255, 0, 0.6));
+}
+
+/* Top bar — popular support. 12 tick segments + blue end tab.
+   Slide_04 tones: yellow #ffe000, white #f0f0f0, orange #ff8030.
+   Unlit segments are dark. */
+.sector-zoom-popup .szp-support-bar {
+  display: flex;
+  flex-direction: row;
+  width: 46px;
+  height: 6px;
+  background: #0a0a0a;
+  border: 1px solid #000;
+  margin-top: 1px;
+  overflow: hidden;
+}
+.sector-zoom-popup .szp-tick {
+  flex: 1;
+  height: 100%;
+  border-right: 1px solid #000;
+}
+.sector-zoom-popup .szp-tick:last-of-type {
+  border-right: none;
+}
+.sector-zoom-popup .szp-tick-yellow { background: #ffe000; }
+.sector-zoom-popup .szp-tick-white  { background: #f0f0f0; }
+.sector-zoom-popup .szp-tick-orange { background: #ff8030; }
+.sector-zoom-popup .szp-tick-off    { background: #181818; }
+.sector-zoom-popup .szp-tick-endtab {
+  width: 3px;
+  height: 100%;
+  background: #2070ff;
+  flex: 0 0 3px;
+}
+
+/* Bottom bar — loyalty split: GREEN (Alliance) + RED (Empire) + small BLUE end tab.
+   Slide_04 colors (sampled): green #00c040, red #d02020, blue tab #2070ff.
+   These are the actual sector-zoom loyalty colors; the earlier blue/red
+   claim was decoded from a tactical combat panel function — see eval doc. */
+.sector-zoom-popup .szp-loyalty-bar {
+  display: flex;
+  flex-direction: row;
+  width: 46px;
+  height: 6px;
+  background: #0a0a0a;
+  border: 1px solid #000;
+  margin-top: 1px;
+  overflow: hidden;
+}
+.sector-zoom-popup .szp-loyalty-alliance {
+  height: 100%;
+  background: #00c040;
+}
+.sector-zoom-popup .szp-loyalty-empire {
+  height: 100%;
+  background: #d02020;
+}
+.sector-zoom-popup .szp-loyalty-endtab {
+  width: 3px;
+  height: 100%;
+  background: #2070ff;
+  flex: 0 0 3px;
+}
+
 .sector-zoom-popup .szp-planet-name {
   font-family: 'Tahoma', sans-serif;
   font-size: 10px;
@@ -851,45 +923,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
-  margin-top: -1px;
+  margin-top: 1px;
   line-height: 1.1;
-}
-/* slide_04: support bars sit ABOVE the planet photo as a tight stack
-   of ~3-4px high segments, ~46px wide. */
-.sector-zoom-popup .szp-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 46px;
-  margin-bottom: 1px;
-}
-.sector-zoom-popup .szp-bar {
-  height: 3px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(80, 90, 105, 0.6);
-}
-.sector-zoom-popup .szp-bar-fill {
-  height: 100%;
-  transition: width 200ms ease-out;
-}
-.sector-zoom-popup .szp-bar-fill.all { background: #4ca44a; box-shadow: 0 0 3px rgba(76,164,74,0.6); }
-.sector-zoom-popup .szp-bar-fill.emp { background: #dc5f3a; box-shadow: 0 0 3px rgba(220,95,58,0.6); }
-.sector-zoom-popup .szp-planet-crest {
-  position: absolute;
-  top: 3px;
-  left: 4px;
-  width: 11px; height: 11px;
-  pointer-events: none;
-}
-.sector-zoom-popup .szp-planet-crest.crest-alliance {
-  background: #c44030;
-  clip-path: polygon(50% 0, 100% 28%, 80% 100%, 50% 78%, 20% 100%, 0 28%);
-  box-shadow: 0 0 3px rgba(220, 80, 60, 0.7);
-}
-.sector-zoom-popup .szp-planet-crest.crest-empire {
-  background: #303030;
-  clip-path: polygon(50% 0, 100% 30%, 85% 70%, 100% 100%, 50% 80%, 0 100%, 15% 70%, 0 30%);
-  box-shadow: 0 0 3px rgba(120, 120, 120, 0.6);
 }
 
 /*

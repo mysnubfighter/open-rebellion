@@ -1,21 +1,22 @@
 /**
- * Sector Zoom Popup — matches slide_04 of the 1998 game.
+ * Sector Zoom Popup — slide_04 itemized faithful match.
  *
- * Layout (measured from reference/golden_1998_slides/slide_04.png):
- *   - Green centered sector name at top of panel
- *   - "4x" speed indicator + minimize + X close on right of title bar
- *   - 2-column layout of planet entries, each entry has:
- *       LEFT  — vertical strip of 4 facility status icons (~10px each):
- *                 shipyard / training / construction / defense
- *       ABOVE — multi-segment colored bar (manufacturing/production)
- *       CENTER — round planet photo (~40px), varied artwork per system
- *       BELOW — multi-segment colored bar (garrison) + green planet name
+ * Cell composition (9 elements, per decompiled/analysis/sector_entry_rebexe_eval.md Pass 5):
+ *   1. Planet sprite — STRATEGY.DLL 10212-10240 via picture_id
+ *   2. Shipyard icon (BMP 11531) — top-left of sprite
+ *   3. Fighter/ship icon (BMP 11537) — top-right of sprite
+ *   4. Training icon (BMP 11534) — bottom-left of sprite
+ *   5. Defense/gear icon (BMP 11540) — bottom-right of sprite
+ *   6. Selection crosshair (BMP 10153) — overlay on selected planet
+ *   7. Top bar — popular support tick segments (yellow/white/orange)
+ *   8. Bottom bar — loyalty split (green=Alliance / red=Empire / small blue end tab)
+ *   9. Planet name — centered green Tahoma below bars
  *
- * Planet positions inside the popup use the REBEXE-authoritative system
- * (x, y) coordinates from SYSTEMSD.DAT, mapped from the sector's bbox
- * to popup space. This produces the same "staggered" arrangement the
- * 1998 game shows (planets aren't on a strict grid — each planet has
- * its own canonical position within the sector).
+ * The REBEXE function that produces this cell remains unidentified after
+ * 5 disassembly passes (see eval doc). The visual itemization is sourced
+ * directly from reference/golden_1998_slides/slide_04.png, which the
+ * REBEXE binary itself produced, so it is authoritative for layout even
+ * though we have not located the constructor function.
  */
 import { useMemo } from 'react';
 import type { StarSystem } from '../../types/game';
@@ -28,23 +29,12 @@ interface Props {
   secondary?: boolean;
 }
 
-// Sorted list of 37×37 planet BMP IDs in STRATEGY.DLL (10212..10240 with
-// gap at 10235-10236). REBEXE's picture_id field (1..26) is a 1-indexed
-// offset into this list.
 const PLANET_SPRITE_IDS = [
   10212, 10213, 10214, 10215, 10216, 10217, 10218, 10219, 10220, 10221,
   10222, 10223, 10224, 10225, 10226, 10227, 10228, 10229, 10230, 10231,
   10232, 10233, 10234, 10237, 10238, 10239, 10240,
 ];
 
-/**
- * Maps a system to its planet sprite BMP id.
- *
- * Uses the REBEXE `picture_id` field from SYSTEMSD.DAT (which is the
- * canonical 1998 game's planet assignment) as the index into the
- * sorted STRATEGY.DLL planet BMP table. Falls back to a deterministic
- * id-based pick when picture_id is missing.
- */
 function planetSpriteFor(s: { name: string; id: number; pictureId?: number }): number {
   if (s.pictureId && s.pictureId >= 1 && s.pictureId <= PLANET_SPRITE_IDS.length) {
     return PLANET_SPRITE_IDS[s.pictureId - 1];
@@ -66,7 +56,6 @@ interface CellProps {
   onClick: () => void;
 }
 
-// xorshift32 hash for deterministic per-system production queues.
 function hash32(x: number): number {
   let v = (x | 0) >>> 0;
   v = (v ^ (v << 13)) >>> 0;
@@ -75,88 +64,104 @@ function hash32(x: number): number {
   return v >>> 0;
 }
 
-/**
- * REBEXE CoolwinStatusBar — a horizontal percentage-fill widget.
- * Per UIPanel_Init_WithStatusBarsAndStrobe @ 0x005e4110, each sector
- * entry has TWO of these at (34, 81) and (103, 81), both 37×10 px.
- *
- * Each bar represents one facility's production progress 0..100, with
- * fill color set by the OWNING FACTION (Alliance=blue 0x020000FF,
- * Empire=red 0x02FF0000) and remainder in dim bg (0x54000000).
- */
-function CoolStatusBar({ pct, faction }: { pct: number; faction: 'Alliance' | 'Empire' | 'Neutral' }) {
-  const fillColor =
-    faction === 'Alliance' ? '#0000FF' :   // 0x020000FF — REBEXE blue
-    faction === 'Empire'   ? '#FF0000' :   // 0x02FF0000 — REBEXE red
-                              '#808080';
-  const clamped = Math.max(0, Math.min(100, pct));
-  return (
-    <div className="szp-coolbar">
-      <span
-        className="szp-coolbar-fill"
-        style={{ width: `${clamped}%`, background: fillColor }}
-      />
-    </div>
-  );
+const SUPPORT_TICK_COUNT = 12;
+
+function computeSupportSegments(s: StarSystem): number {
+  const a = Math.max(0, Math.min(1, s.popularityAlliance));
+  const e = Math.max(0, Math.min(1, s.popularityEmpire));
+  const total = Math.max(0.001, a + e);
+  return Math.max(2, Math.round((total / 1.0) * SUPPORT_TICK_COUNT));
 }
 
-/**
- * REBEXE CoolStrobeButton (vertical strip variant) — animated facility
- * indicator. Each sector entry has TWO at top: shipyard at (7, 10) and
- * training at (132, 10), both 11×53 px. The strobe alternates between
- * two BMP frames when production is active.
- */
-function CoolStrobeStrip({ seed, facilityIdx, faction }: {
-  seed: number; facilityIdx: number; faction: 'Alliance' | 'Empire' | 'Neutral';
-}) {
-  // Active when (system, facility) hashes above threshold.
-  const active = hash32(seed * 17 + facilityIdx * 41) % 100 > 40;
-  const bg =
-    !active ? '#202020' :
-    faction === 'Alliance' ? '#4080ff' :
-    faction === 'Empire'   ? '#ff4040' :
-                              '#888888';
-  return <span className="szp-strobe-strip" style={{ background: bg }} />;
-}
-
-/**
- * PlanetCell — faithful visual match of slide_04 reference. NOT
- * pretending to mirror a specific REBEXE function — see
- * decompiled/analysis/sector_entry_rebexe_eval.md Pass 4 for why
- * the actual sector entry constructor remains unidentified.
- *
- * Layout: planet sprite (center) + thin loyalty bar (above) + green
- * name (below). Loyalty bar uses REBEXE's PALETTERGB-decoded colors:
- *   bg = BLUE (PALETTERGB(0,0,255) = REBEXE 0x02FF0000)
- *   fg = RED  (PALETTERGB(255,0,0) = REBEXE 0x020000FF)
- * Fill width = (1 - alliance_pct), so 0% Alliance shows full red
- * (Empire dominant) and 100% Alliance shows full blue.
- */
 function PlanetCell({ s, isSelected, onClick }: CellProps) {
   const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
   const a = Math.max(0, Math.min(1, s.popularityAlliance));
   const e = Math.max(0, Math.min(1, s.popularityEmpire));
-  // Empire fraction of the alliance+empire axis. Used to size the red
-  // foreground bar within the blue background.
-  const empireFill = e / Math.max(0.01, a + e) * 100;
+  const total = Math.max(0.001, a + e);
+  const alliancePct = (a / total) * 95;
+  const empirePct = 95 - alliancePct;
+  const supportLit = computeSupportSegments(s);
+  const tickSeed = hash32(s.id + 7);
+
   return (
     <button
       className={`szp-planet ${isSelected ? 'selected' : ''}`}
       onClick={onClick}
       title={`${s.name} — ${s.control}`}
+      data-testid={`szp-planet-${s.id}`}
     >
-      <div className="szp-loyalty-bar">
-        <span
-          className="szp-loyalty-fill"
-          style={{ width: `${empireFill}%` }}
+      <div className="szp-sprite-wrap">
+        <img
+          className="szp-fi szp-fi-tl"
+          src="/assets/sprites/strategy/11531.png"
+          alt=""
+          draggable={false}
+          title="Shipyard"
         />
+        <img
+          className="szp-fi szp-fi-tr"
+          src="/assets/sprites/strategy/11537.png"
+          alt=""
+          draggable={false}
+          title="Fighter facility"
+        />
+        <img
+          className="szp-fi szp-fi-bl"
+          src="/assets/sprites/strategy/11534.png"
+          alt=""
+          draggable={false}
+          title="Training facility"
+        />
+        <img
+          className="szp-fi szp-fi-br"
+          src="/assets/sprites/strategy/11540.png"
+          alt=""
+          draggable={false}
+          title="Defense"
+        />
+        <img
+          className="szp-planet-sprite"
+          src={`/assets/sprites/strategy/${spriteId}.png`}
+          alt=""
+          draggable={false}
+        />
+        {isSelected && (
+          <img
+            className="szp-selection-cross"
+            src="/assets/sprites/strategy/10153.png"
+            alt=""
+            draggable={false}
+            data-testid="szp-selection-cross"
+          />
+        )}
       </div>
-      <img
-        className="szp-planet-sprite"
-        src={`/assets/sprites/strategy/${spriteId}.png`}
-        alt=""
-        draggable={false}
-      />
+
+      <div className="szp-support-bar" data-testid="szp-support-bar">
+        {Array.from({ length: SUPPORT_TICK_COUNT }).map((_, i) => {
+          const lit = i < supportLit;
+          const r = hash32(tickSeed + i * 31) % 100;
+          const tone =
+            !lit ? 'szp-tick-off' :
+            r < 25 ? 'szp-tick-yellow' :
+            r < 70 ? 'szp-tick-white' :
+                     'szp-tick-orange';
+          return <span key={i} className={`szp-tick ${tone}`} />;
+        })}
+        <span className="szp-tick-endtab" />
+      </div>
+
+      <div className="szp-loyalty-bar" data-testid="szp-loyalty-bar">
+        <span
+          className="szp-loyalty-alliance"
+          style={{ width: `${alliancePct}%` }}
+        />
+        <span
+          className="szp-loyalty-empire"
+          style={{ width: `${empirePct}%` }}
+        />
+        <span className="szp-loyalty-endtab" />
+      </div>
+
       <div className="szp-planet-name">{s.name}</div>
     </button>
   );
@@ -168,9 +173,6 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
     [allSystems, selectedSystem.sectorId],
   );
 
-  // 1998 original arranges planets at their ABSOLUTE (x, y) within the
-  // sector — not in a grid. Compute the sector's bbox and map each
-  // system's (x, y) to popup-local coordinates.
   const layout = useMemo(() => {
     if (sectorSystems.length === 0) return null;
     const xs = sectorSystems.map((s) => s.x ?? 0);
@@ -197,9 +199,6 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
           <div className="szp-empty">No systems known in this sector.</div>
         ) : (
           sectorSystems.map((s) => {
-            // Map system's REBEXE (x, y) to popup-local % coords.
-            // The original game positions planets organically — not in
-            // a grid — per their SYSTEMSD.DAT positions.
             const px = layout
               ? ((s.x ?? 0) - layout.minX) / layout.rangeX * 75 + 5
               : 0;
