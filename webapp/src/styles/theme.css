@@ -127,6 +127,120 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
   font-weight: bold;
 }
 
+/* "np-" prefix = native panel. Native filter toolbar + list rows used
+   by Manufacturing, Loyalty, Officers, etc. Matches slide_07 layout. */
+.np-toolbar {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  padding: 4px;
+  background: #1E3EA6;
+  border-bottom: 1px solid #1A1F40;
+}
+.np-tab {
+  background: transparent;
+  border: 1px solid #3A416C;
+  color: #00FFFF;
+  padding: 2px 10px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  outline: none;
+}
+.np-tab:hover {
+  border-color: #00FFFF;
+  color: #FFFFFF;
+}
+.np-tab--active {
+  background: #00FF00;
+  color: #18149F;
+  font-weight: bold;
+  border-color: #00FF00;
+}
+.np-empty {
+  padding: 24px;
+  text-align: center;
+  color: #00FFFF;
+  font-style: italic;
+}
+.np-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.np-system-block {
+  margin-bottom: 6px;
+}
+.np-system-name {
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  color: #FFFFFF;
+  background: #1E3EA6;
+  padding: 2px 8px;
+  border-bottom: 1px solid #3A416C;
+}
+.np-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 50px 40px;
+  grid-template-rows: auto 4px;
+  gap: 2px 6px;
+  align-items: center;
+  padding: 3px 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #00FFFF;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  width: 100%;
+}
+.np-row:hover {
+  color: #FFFFFF;
+  background: rgba(30, 62, 166, 0.6);
+}
+.np-row--active {
+  background: #00FF00;
+  color: #18149F;
+  font-weight: bold;
+  border-color: #00FF00;
+}
+.np-row-kind {
+  color: #80C0FF;
+}
+.np-row--active .np-row-kind { color: #18149F; }
+.np-row-name {
+  text-align: left;
+}
+.np-row-pct {
+  text-align: right;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+}
+.np-row-days {
+  text-align: right;
+  font-family: 'Consolas', monospace;
+  font-size: 11px;
+}
+.np-row-bar {
+  grid-column: 1 / -1;
+  height: 4px;
+  background: #0A0A2A;
+  border: 1px solid #1A1F40;
+  position: relative;
+  overflow: hidden;
+}
+.np-row-bar-fill {
+  display: block;
+  height: 100%;
+  background: #00FF00;
+}
+.np-row--active .np-row-bar-fill {
+  background: #FFFFFF;
+}
+
 /* Inset frame — used for content areas inside panels */
 .inset {
   background: var(--bg-deep);
