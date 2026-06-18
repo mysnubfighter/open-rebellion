@@ -21,12 +21,31 @@
 import { useMemo } from 'react';
 import type { StarSystem } from '../../types/game';
 
+/**
+ * Click targets per the sector_entry_rebexe_eval.md Pass 5 itemization
+ * + panel_inventory.md mapping. Each cell element fires a typed action
+ * which the App routes to the proper native panel.
+ */
+export type CellAction =
+  | 'open-shipyard'   // shipyard icon  -> Build Ships (slide 5 item 1)
+  | 'open-fighters'   // fighter icon   -> Fleet / Build Fighters
+  | 'open-training'   // training icon  -> Build Troops (slide 5 item 2)
+  | 'open-defense'    // defense icon   -> Build Facilities (slide 5 item 3)
+  | 'open-loyalty'    // loyalty bar    -> Galaxy Overview - Loyalty
+  | 'open-support'    // support bar    -> Galaxy Overview - Popular Support
+  | 'open-detail'     // planet sprite  -> System Detail / Personnel
+  | 'open-name';      // planet name    -> System context menu
+
 interface Props {
   allSystems: StarSystem[];
   selectedSystem: StarSystem;
   onSelectSystem: (id: number) => void;
   onClose: () => void;
   secondary?: boolean;
+  /** Fires when a specific cell element is clicked. */
+  onCellAction?: (systemId: number, action: CellAction) => void;
+  /** Right-click on any part of a cell — opens system context menu. */
+  onCellContextMenu?: (systemId: number, x: number, y: number) => void;
 }
 
 const PLANET_SPRITE_IDS = [
@@ -54,6 +73,8 @@ interface CellProps {
   s: StarSystem;
   isSelected: boolean;
   onClick: () => void;
+  onCellAction?: (systemId: number, action: CellAction) => void;
+  onContextMenu?: (systemId: number, x: number, y: number) => void;
 }
 
 function hash32(x: number): number {
@@ -73,7 +94,7 @@ function computeSupportSegments(s: StarSystem): number {
   return Math.max(2, Math.round((total / 1.0) * SUPPORT_TICK_COUNT));
 }
 
-function PlanetCell({ s, isSelected, onClick }: CellProps) {
+function PlanetCell({ s, isSelected, onClick, onCellAction, onContextMenu }: CellProps) {
   const spriteId = planetSpriteFor({ name: s.name, id: s.id, pictureId: s.pictureId });
   const a = Math.max(0, Math.min(1, s.popularityAlliance));
   const e = Math.max(0, Math.min(1, s.popularityEmpire));
@@ -83,48 +104,77 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
   const supportLit = computeSupportSegments(s);
   const tickSeed = hash32(s.id + 7);
 
+  const fire = (action: CellAction) => (ev: React.MouseEvent) => {
+    ev.stopPropagation();
+    if (onCellAction) {
+      onCellAction(s.id, action);
+    } else {
+      onClick();
+    }
+  };
+  const rightClick = (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (onContextMenu) onContextMenu(s.id, ev.clientX, ev.clientY);
+  };
+
   return (
-    <button
+    <div
       className={`szp-planet ${isSelected ? 'selected' : ''}`}
-      onClick={onClick}
-      title={`${s.name} — ${s.control}`}
+      onContextMenu={rightClick}
       data-testid={`szp-planet-${s.id}`}
     >
       <div className="szp-sprite-wrap">
-        <img
+        <button
+          type="button"
           className="szp-fi szp-fi-tl"
-          src="/assets/sprites/strategy/11531.png"
-          alt=""
-          draggable={false}
-          title="Shipyard"
-        />
-        <img
+          onClick={fire('open-shipyard')}
+          title="Shipyard - Build Ships"
+          data-testid={`szp-shipyard-${s.id}`}
+        >
+          <img src="/assets/sprites/strategy/11531.png" alt="" draggable={false} />
+        </button>
+        <button
+          type="button"
           className="szp-fi szp-fi-tr"
-          src="/assets/sprites/strategy/11537.png"
-          alt=""
-          draggable={false}
-          title="Fighter facility"
-        />
-        <img
+          onClick={fire('open-fighters')}
+          title="Fighters - Manage Fleet"
+          data-testid={`szp-fighters-${s.id}`}
+        >
+          <img src="/assets/sprites/strategy/11537.png" alt="" draggable={false} />
+        </button>
+        <button
+          type="button"
           className="szp-fi szp-fi-bl"
-          src="/assets/sprites/strategy/11534.png"
-          alt=""
-          draggable={false}
-          title="Training facility"
-        />
-        <img
+          onClick={fire('open-training')}
+          title="Training - Build Troops"
+          data-testid={`szp-training-${s.id}`}
+        >
+          <img src="/assets/sprites/strategy/11534.png" alt="" draggable={false} />
+        </button>
+        <button
+          type="button"
           className="szp-fi szp-fi-br"
-          src="/assets/sprites/strategy/11540.png"
-          alt=""
-          draggable={false}
-          title="Defense"
-        />
-        <img
-          className="szp-planet-sprite"
-          src={`/assets/sprites/strategy/${spriteId}.png`}
-          alt=""
-          draggable={false}
-        />
+          onClick={fire('open-defense')}
+          title="Defense - Build Facilities"
+          data-testid={`szp-defense-${s.id}`}
+        >
+          <img src="/assets/sprites/strategy/11540.png" alt="" draggable={false} />
+        </button>
+        <button
+          type="button"
+          className="szp-planet-sprite-btn"
+          onClick={fire('open-detail')}
+          title={`${s.name} — open System Detail`}
+          data-testid={`szp-sprite-${s.id}`}
+        >
+          <img
+            className="szp-planet-sprite"
+            src={`/assets/sprites/strategy/${spriteId}.png`}
+            alt=""
+            draggable={false}
+          />
+        </button>
         {isSelected && (
           <img
             className="szp-selection-cross"
@@ -136,7 +186,13 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
         )}
       </div>
 
-      <div className="szp-support-bar" data-testid="szp-support-bar">
+      <button
+        type="button"
+        className="szp-support-bar"
+        onClick={fire('open-support')}
+        title="Popular Support - Galaxy Overview"
+        data-testid={`szp-support-bar-${s.id}`}
+      >
         {Array.from({ length: SUPPORT_TICK_COUNT }).map((_, i) => {
           const lit = i < supportLit;
           const r = hash32(tickSeed + i * 31) % 100;
@@ -148,9 +204,15 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
           return <span key={i} className={`szp-tick ${tone}`} />;
         })}
         <span className="szp-tick-endtab" />
-      </div>
+      </button>
 
-      <div className="szp-loyalty-bar" data-testid="szp-loyalty-bar">
+      <button
+        type="button"
+        className="szp-loyalty-bar"
+        onClick={fire('open-loyalty')}
+        title="Loyalty - Galaxy Overview"
+        data-testid={`szp-loyalty-bar-${s.id}`}
+      >
         <span
           className="szp-loyalty-alliance"
           style={{ width: `${alliancePct}%` }}
@@ -160,14 +222,22 @@ function PlanetCell({ s, isSelected, onClick }: CellProps) {
           style={{ width: `${empirePct}%` }}
         />
         <span className="szp-loyalty-endtab" />
-      </div>
+      </button>
 
-      <div className="szp-planet-name">{s.name}</div>
-    </button>
+      <button
+        type="button"
+        className="szp-planet-name"
+        onClick={fire('open-name')}
+        title={`${s.name} — open context menu`}
+        data-testid={`szp-name-${s.id}`}
+      >
+        {s.name}
+      </button>
+    </div>
   );
 }
 
-export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, onClose, secondary = false }: Props) {
+export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, onClose, secondary = false, onCellAction, onCellContextMenu }: Props) {
   const sectorSystems = useMemo(
     () => allSystems.filter((s) => s.sectorId === selectedSystem.sectorId),
     [allSystems, selectedSystem.sectorId],
@@ -215,6 +285,14 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
                   s={s}
                   isSelected={s.id === selectedSystem.id}
                   onClick={() => onSelectSystem(s.id)}
+                  onCellAction={(systemId, action) => {
+                    onSelectSystem(systemId);
+                    if (onCellAction) onCellAction(systemId, action);
+                  }}
+                  onContextMenu={(systemId, x, y) => {
+                    onSelectSystem(systemId);
+                    if (onCellContextMenu) onCellContextMenu(systemId, x, y);
+                  }}
                 />
               </div>
             );

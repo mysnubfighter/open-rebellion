@@ -398,6 +398,35 @@ export function App() {
                   setZoomPopupClosed(false);
                 }}
                 onClose={() => setZoomPopupClosed(true)}
+                onCellAction={(id, action) => {
+                  // Wire each cell element to its native panel per
+                  // decompiled/analysis/panel_inventory.md.
+                  setSelectedSystemId(id);
+                  setDetailSystemId(id);
+                  switch (action) {
+                    case 'open-shipyard':
+                    case 'open-fighters':
+                    case 'open-training':
+                    case 'open-defense':
+                      setActivePanel('manufacture');
+                      break;
+                    case 'open-loyalty':
+                    case 'open-support':
+                      setActivePanel('loyalty');
+                      break;
+                    case 'open-detail':
+                      setZoomPopupClosed(false);
+                      break;
+                    case 'open-name':
+                      // Open the system context menu anchored to the cell
+                      setCtxMenu({ x: window.innerWidth / 2, y: window.innerHeight / 3, systemId: id });
+                      break;
+                  }
+                }}
+                onCellContextMenu={(id, x, y) => {
+                  setSelectedSystemId(id);
+                  setCtxMenu({ x, y, systemId: id });
+                }}
               />
             )}
             {/* Multi-sector zoom (slide 15): second popup on the right half. */}

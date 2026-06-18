@@ -828,17 +828,48 @@
 /* 4 facility icons flanking the sprite at corners.
    BMP IDs per decompiled/analysis/sector_entry_rebexe_eval.md Pass 5:
      11531 = shipyard, 11537 = fighter, 11534 = training, 11540 = defense
-   Native dims 12×12 for 11531/11534/11537/11540. */
+   Native dims 12×12. Each icon is a button — clicking opens the proper
+   panel per panel_inventory.md mapping. */
 .sector-zoom-popup .szp-fi {
   position: absolute;
+  width: 14px; height: 14px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sector-zoom-popup .szp-fi img {
   width: 12px; height: 12px;
   image-rendering: pixelated;
   pointer-events: none;
 }
-.sector-zoom-popup .szp-fi-tl { top: 1px;  left: 0; }
-.sector-zoom-popup .szp-fi-tr { top: 1px;  right: 0; }
-.sector-zoom-popup .szp-fi-bl { bottom: 4px; left: 0; }
-.sector-zoom-popup .szp-fi-br { bottom: 4px; right: 0; }
+.sector-zoom-popup .szp-fi:hover {
+  border-color: #80ff80;
+  background: rgba(40, 100, 40, 0.4);
+}
+.sector-zoom-popup .szp-fi-tl { top: 0; left: 0; }
+.sector-zoom-popup .szp-fi-tr { top: 0; right: 0; }
+.sector-zoom-popup .szp-fi-bl { bottom: 3px; left: 0; }
+.sector-zoom-popup .szp-fi-br { bottom: 3px; right: 0; }
+
+/* Planet sprite button — wraps the sprite img for click + hover state. */
+.sector-zoom-popup .szp-planet-sprite-btn {
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sector-zoom-popup .szp-planet-sprite-btn:hover {
+  border-color: rgba(120, 200, 255, 0.4);
+}
 
 /* Selection crosshair (STRATEGY.DLL 10153, native 15×15).
    Overlays the planet sprite when selected. */
@@ -854,7 +885,7 @@
 
 /* Top bar — popular support. 12 tick segments + blue end tab.
    Slide_04 tones: yellow #ffe000, white #f0f0f0, orange #ff8030.
-   Unlit segments are dark. */
+   Unlit segments are dark. Whole bar is a button (opens Galaxy Overview). */
 .sector-zoom-popup .szp-support-bar {
   display: flex;
   flex-direction: row;
@@ -863,7 +894,13 @@
   background: #0a0a0a;
   border: 1px solid #000;
   margin-top: 1px;
+  padding: 0;
   overflow: hidden;
+  cursor: pointer;
+  outline: none;
+}
+.sector-zoom-popup .szp-support-bar:hover {
+  border-color: #ffe080;
 }
 .sector-zoom-popup .szp-tick {
   flex: 1;
@@ -887,7 +924,8 @@
 /* Bottom bar — loyalty split: GREEN (Alliance) + RED (Empire) + small BLUE end tab.
    Slide_04 colors (sampled): green #00c040, red #d02020, blue tab #2070ff.
    These are the actual sector-zoom loyalty colors; the earlier blue/red
-   claim was decoded from a tactical combat panel function — see eval doc. */
+   claim was decoded from a tactical combat panel function — see eval doc.
+   Whole bar is a button (opens Galaxy Overview - Loyalty). */
 .sector-zoom-popup .szp-loyalty-bar {
   display: flex;
   flex-direction: row;
@@ -896,7 +934,13 @@
   background: #0a0a0a;
   border: 1px solid #000;
   margin-top: 1px;
+  padding: 0;
   overflow: hidden;
+  cursor: pointer;
+  outline: none;
+}
+.sector-zoom-popup .szp-loyalty-bar:hover {
+  border-color: #80ff80;
 }
 .sector-zoom-popup .szp-loyalty-alliance {
   height: 100%;
@@ -913,11 +957,18 @@
   flex: 0 0 3px;
 }
 
+/* Planet name — clickable button styled to look like plain text. Click
+   opens the system context menu. */
 .sector-zoom-popup .szp-planet-name {
   font-family: 'Tahoma', sans-serif;
   font-size: 10px;
   font-weight: normal;
   color: #80ff80;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0 2px;
+  cursor: pointer;
+  outline: none;
   text-shadow: 0 0 2px rgba(0, 0, 0, 1);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -925,6 +976,10 @@
   max-width: 100%;
   margin-top: 1px;
   line-height: 1.1;
+}
+.sector-zoom-popup .szp-planet-name:hover {
+  color: #ffffff;
+  background: rgba(80, 160, 80, 0.3);
 }
 
 /*
