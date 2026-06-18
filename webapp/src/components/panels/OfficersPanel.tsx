@@ -66,7 +66,7 @@ export function OfficersPanel({ characters, systems, playerFaction, onClose, onD
   });
 
   return (
-    <PanelShell title="Personnel" onClose={onClose} width={880}>
+    <PanelShell title="Personnel" onClose={onClose} panelKey="officers">
       <div className="np-toolbar">
         {(['all', 'major', 'minor', 'mission'] as const).map((f) => (
           <button

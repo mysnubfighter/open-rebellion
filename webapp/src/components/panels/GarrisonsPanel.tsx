@@ -89,7 +89,7 @@ export function GarrisonsPanel({ systems, playerFaction, onClose }: Props) {
   );
 
   return (
-    <PanelShell title="Manage Garrisons" onClose={onClose} width={800}>
+    <PanelShell title="Manage Garrisons" onClose={onClose} panelKey="garrisons">
       <div className="np-toolbar">
         {FILTERS.map((f) => (
           <button

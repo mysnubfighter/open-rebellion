@@ -1,0 +1,89 @@
+{
+  "_comment": "Inset rectangles inside each native panel BMP where content overlays. Coordinates are pixel-measured against the native BMP's pixel dimensions. The webapp scales the BMP to fit the cockpit monitor and scales the inset rectangle proportionally.",
+
+  "common/10100": {
+    "label": "generic-monitor",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 32, "y": 32, "w": 570, "h": 380 }
+  },
+  "common/10101": {
+    "label": "production-2bar",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 32, "y": 32, "w": 570, "h": 380 }
+  },
+  "common/10102": {
+    "label": "production-2bar-alt",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 32, "y": 32, "w": 570, "h": 380 }
+  },
+  "common/10103": {
+    "label": "list-4row",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 32, "y": 32, "w": 570, "h": 380 }
+  },
+  "common/20001": {
+    "label": "cockpit-window",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 100, "y": 40, "w": 440, "h": 220 }
+  },
+  "common/20002": {
+    "label": "sound-options",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 18, "y": 18, "w": 604, "h": 444 }
+  },
+  "strategy/11165": {
+    "label": "side-portrait",
+    "bmpSize": { "w": 235, "h": 304 },
+    "inset": { "x": 8, "y": 8, "w": 218, "h": 285 }
+  },
+  "strategy/11554": {
+    "label": "alliance-faction",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "strategy/11555": {
+    "label": "empire-faction",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "strategy/11556": {
+    "label": "neutral-faction",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "strategy/11557": {
+    "label": "alliance-faction-alt",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "strategy/11558": {
+    "label": "empire-faction-alt",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "strategy/11559": {
+    "label": "neutral-faction-alt",
+    "bmpSize": { "w": 379, "h": 272 },
+    "inset": { "x": 14, "y": 14, "w": 220, "h": 246 }
+  },
+  "tactical/1000": {
+    "label": "tactical-combat",
+    "bmpSize": { "w": 640, "h": 480 },
+    "inset": { "x": 17, "y": 30, "w": 440, "h": 435 }
+  },
+  "rebdlog/10621": {
+    "label": "dialog-1",
+    "bmpSize": { "w": 412, "h": 176 },
+    "inset": { "x": 30, "y": 14, "w": 350, "h": 130 }
+  },
+  "rebdlog/10622": {
+    "label": "dialog-2",
+    "bmpSize": { "w": 412, "h": 176 },
+    "inset": { "x": 30, "y": 14, "w": 350, "h": 130 }
+  },
+  "rebdlog/10623": {
+    "label": "dialog-3",
+    "bmpSize": { "w": 412, "h": 176 },
+    "inset": { "x": 30, "y": 14, "w": 350, "h": 130 }
+  }
+}

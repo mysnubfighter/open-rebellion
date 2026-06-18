@@ -41,7 +41,7 @@ export function FleetsPanel({ systems, characters, playerFaction, onClose }: Pro
     : null;
 
   return (
-    <PanelShell title="Fleet Command" onClose={onClose} width={820}>
+    <PanelShell title="Fleet Command" onClose={onClose} panelKey="fleets">
       <div className="np-toolbar">
         {(['all', 'in-system', 'transit'] as const).map((f) => (
           <button

@@ -61,7 +61,7 @@ export function ManufacturePanel({ systems, playerFaction, onClose }: Props) {
   );
 
   return (
-    <PanelShell title="Manage Production" onClose={onClose} width={800}>
+    <PanelShell title="Manage Production" onClose={onClose} panelKey="manufacture">
       {/* slide_07: filter buttons across top of panel content area. */}
       <div className="np-toolbar">
         {FILTERS.map((f) => (

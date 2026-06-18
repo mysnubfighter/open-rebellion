@@ -27,7 +27,7 @@ export function MissionsPanel({ missions, world, onClose }: Props) {
   });
 
   return (
-    <PanelShell title="Active Missions" onClose={onClose} width={680}>
+    <PanelShell title="Active Missions" onClose={onClose} panelKey="missions">
       <div className="np-toolbar">
         {(['all', 'diplomatic', 'covert'] as const).map((f) => (
           <button

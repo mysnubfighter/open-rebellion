@@ -29,7 +29,7 @@ export function ResearchPanel({ onClose, characters }: { onClose: () => void; pl
   useEffect(() => { Engine.getResearch().then(setProjects); }, []);
   const charName = (id: number) => characters.find((c) => c.id === id)?.name ?? `#${id}`;
   return (
-    <PanelShell title="Research &amp; Development" onClose={onClose} width={720}>
+    <PanelShell title="Research &amp; Development" onClose={onClose} panelKey="research">
       <div className="np-list">
         {projects.map((p) => {
           const isActive = activeId === p.tree;
@@ -67,7 +67,7 @@ export function JediPanel({ onClose }: { onClose: () => void; characters: Charac
   const [activeId, setActiveId] = useState<number | null>(null);
   useEffect(() => { Engine.getJedi().then(setJedi); }, []);
   return (
-    <PanelShell title="Jedi Order" onClose={onClose} width={680}>
+    <PanelShell title="Jedi Order" onClose={onClose} panelKey="jedi">
       {jedi.length === 0 ? (
         <div className="np-empty">No Force-sensitives detected.</div>
       ) : (
@@ -145,7 +145,7 @@ export function LoyaltyPanel({ onClose, playerFaction }: { onClose: () => void; 
   ];
 
   return (
-    <PanelShell title="Galaxy Overview - Loyalty" onClose={onClose} width={760}>
+    <PanelShell title="Galaxy Overview - Loyalty" onClose={onClose} panelKey="loyalty">
       <div className="np-toolbar">
         {FILTERS.map((f) => (
           <button
@@ -198,7 +198,7 @@ export function EncyclopediaPanel({ onClose, characters, systems }: { onClose: (
   const [tab, setTab] = useState<'characters' | 'systems'>('characters');
   const [activeId, setActiveId] = useState<string | null>(null);
   return (
-    <PanelShell title="Galactic Encyclopedia" onClose={onClose} width={820}>
+    <PanelShell title="Galactic Encyclopedia" onClose={onClose} panelKey="encyclopedia">
       <div className="np-toolbar">
         <button
           className={`np-tab${tab === 'characters' ? ' np-tab--active' : ''}`}
@@ -273,7 +273,7 @@ export function MessagesPanel({ onClose, world }: { onClose: () => void; world?:
   ];
   const filtered = filter === 'all' ? events : events.filter((e) => e.cat === filter);
   return (
-    <PanelShell title="Message Index" onClose={onClose} width={680}>
+    <PanelShell title="Message Index" onClose={onClose} panelKey="messages">
       <div className="np-toolbar">
         {FILTERS.map((f) => (
           <button
@@ -348,7 +348,7 @@ export function SaveLoadPanel({ onClose, world }: { onClose: () => void; world: 
   };
 
   return (
-    <PanelShell title="Saved Games" onClose={onClose} width={680}>
+    <PanelShell title="Saved Games" onClose={onClose} panelKey="saveload">
       <div className="np-list" style={{ maxHeight: 460, overflowY: 'auto' }}>
         {Array.from({ length: 10 }).map((_, slot) => {
           const s = slots.find((x) => x.slot === slot);
@@ -382,7 +382,7 @@ export function OptionsPanel({ onClose }: { onClose: () => void }) {
     setVol({ ...vol, [key]: v });
   };
   return (
-    <PanelShell title="Sound Options" onClose={onClose} width={520}>
+    <PanelShell title="Sound Options" onClose={onClose} panelKey="options">
       <div className="op-skills-title" style={{ marginTop: 0 }}>Audio Levels</div>
       <div className="op-skills">
         {(['master', 'music', 'sfx', 'voice'] as const).map((key) => {
