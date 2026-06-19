@@ -258,13 +258,20 @@ export function SectorZoomPopup({ allSystems, selectedSystem, onSelectSystem, on
 
   return (
     <div className={`sector-zoom-popup${secondary ? ' sector-zoom-popup--secondary' : ''}`}>
-      {/* RETRACTION: 11100/11101 are NOT the sector zoom panel chrome.
-          Per decompiled/functions/FUN_0045f660.c they're slots 1+2 in
-          UIWnd_MapEntityTypeToPanel - a 26-entry table mapping entity
-          type to inner-pane BMP for the dual-pane UIPanel_Init_WithGDI
-          editor (0x0046a9c0). The actual REBEXE sector zoom function
-          remains unidentified. See panel_native_implementation_plan.md
-          Pass 4+ in sector_entry_rebexe_eval.md. */}
+      {/* Native REBEXE chrome: STRATEGY.DLL 10577 (235x304 starfield + Earth scene).
+          Per decompiled/functions/FUN_004a8790.c line 107:
+            UICtrl_Init(uVar1, 0x2951, 10)  // 0x2951 = 10577
+            UIPanel_AssignAndCreate(local_30, 0x32)
+          This is the panel chrome assigned to slot 0x32 by REBEXE's
+          UIPanel_Init_GameObjDialog @ 0x004a8790 — the sector zoom
+          dialog. Native dims 235x304. image-rendering: pixelated
+          preserves the 1998 DirectDraw look. */}
+      <img
+        className="szp-bg-native"
+        src="/assets/panels/strategy/10577.png"
+        alt=""
+        draggable={false}
+      />
       <div className="szp-header">
         <span className="szp-title">{sectorName}</span>
         <span className="szp-speed">4x</span>
