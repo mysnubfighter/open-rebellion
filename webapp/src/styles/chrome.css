@@ -303,23 +303,13 @@
  * top:79% to cover his taller sprite. Subtle red tint at bottom hints at
  * the Alliance logo area to his left.
  */
+/* C-3PO pedestal: the native chrome PNG already bakes in the right-side
+   metal floor where C-3PO stands. The earlier CSS gradient was filling
+   the chrome's transparent gap region with a flat metallic color, which
+   produced a visible artificial "box" behind C-3PO (see user's screenshot
+   highlight). Removed - let whatever's behind the chrome show through. */
 .cockpit-c3po-pedestal {
-  position: absolute;
-  left: 89.5%;
-  width: 9%;
-  top: 79%;
-  bottom: 0;
-  z-index: 2;
-  background:
-    linear-gradient(180deg,
-      #a2a8b0 0%,
-      #b8bcc4 25%,
-      #c8ccd0 55%,
-      #b8b8b8 80%,
-      /* hint of alliance-logo red at very bottom */
-      #b09080 95%,
-      #a48070 100%);
-  pointer-events: none;
+  display: none;
 }
 .cockpit-droid.c3po {
   /* C-3PO stands on the red Alliance pedestal at bottom-right */
@@ -341,13 +331,19 @@
  *   Slot D:  67.0%–81.7% (wrench icon — manufacturing / build count)
  *   Slot E:  ~88%–99%    (day counter, top-right)
  */
+/* slide_01 native: top-bar numbers are GREEN (#00FF00) inside 3 stat
+   slots (Troops / Ships / Build). Sampled from native top crop +
+   confirmed in reference/_slide01_top.png. The earlier 5-stat layout
+   (popularity left + day right) was my own addition and is now hidden
+   so only the 3 native slots show. */
 .cockpit-stat {
   position: absolute;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: #e8c060;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 14px;
+  font-weight: bold;
+  color: #00FF00;
   text-align: right;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 1);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 1);
   pointer-events: none;
   z-index: 4;
   top: 1.5%;
@@ -357,16 +353,12 @@
   justify-content: flex-end;
   padding-right: 8px;
 }
-.cockpit-stat.stat-pop  { left: 15.9%; width: 9.6%; padding-right: 4px; }
+/* slide_01: "popularity" + "day" stats not in the native top bar - hide. */
+.cockpit-stat.stat-pop  { display: none; }
+.cockpit-stat.stat-day  { display: none; }
 .cockpit-stat.stat-tank { left: 37.3%; width: 14.3%; }
 .cockpit-stat.stat-ship { left: 52.2%; width: 14.2%; }
 .cockpit-stat.stat-wrench { left: 67.0%; width: 14.7%; }
-.cockpit-stat.stat-day {
-  left: 87%; width: 7%;
-  color: #ff8050;
-  font-weight: bold;
-  justify-content: center;
-}
 
 /* Speed indicator dots in the far top-right (chrome has a strip with slots) */
 .cockpit-speed-indicators {
@@ -829,18 +821,28 @@
   background: rgba(20, 80, 20, 0.3);
 }
 
-/* Sprite + 4 facility icons live in a relatively-positioned container
-   so the icons can be absolutely placed at each corner of the sprite. */
+/* Normalized planet cell sizing - slide_04 native ratios:
+   Native popup = 260px wide
+   Native planet sprite = ~30px = 11.5% of popup width
+   Native cell-wrap (sprite + corner icons) = ~50px = 19% of popup
+   Native bar width = ~35px = 13.5% of popup
+   Native icon = ~10px = 4% of popup
+   We use cqw (container-query width) units which scale with the popup
+   container. This makes cells size correctly at any popup size. */
+.sector-zoom-popup {
+  container-type: inline-size;
+}
 .sector-zoom-popup .szp-sprite-wrap {
   position: relative;
-  width: 56px;   /* sprite 37 + 9 padding on each side for icons */
-  height: 56px;
+  width: clamp(56px, 14cqw, 90px);
+  height: clamp(56px, 14cqw, 90px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .sector-zoom-popup .szp-planet-sprite {
-  width: 37px; height: 37px;
+  width: clamp(37px, 10cqw, 60px);
+  height: clamp(37px, 10cqw, 60px);
   image-rendering: pixelated;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.7));
 }
@@ -852,7 +854,8 @@
    panel per panel_inventory.md mapping. */
 .sector-zoom-popup .szp-fi {
   position: absolute;
-  width: 14px; height: 14px;
+  width: clamp(14px, 3.5cqw, 20px);
+  height: clamp(14px, 3.5cqw, 20px);
   padding: 0;
   background: transparent;
   border: 1px solid transparent;
@@ -863,7 +866,8 @@
   justify-content: center;
 }
 .sector-zoom-popup .szp-fi img {
-  width: 12px; height: 12px;
+  width: clamp(12px, 3cqw, 18px);
+  height: clamp(12px, 3cqw, 18px);
   image-rendering: pixelated;
   pointer-events: none;
 }
@@ -909,8 +913,8 @@
 .sector-zoom-popup .szp-support-bar {
   display: flex;
   flex-direction: row;
-  width: 46px;
-  height: 6px;
+  width: clamp(46px, 12cqw, 70px);
+  height: clamp(6px, 1.8cqw, 9px);
   background: #0a0a0a;
   border: 1px solid #000;
   margin-top: 1px;
@@ -949,8 +953,8 @@
 .sector-zoom-popup .szp-loyalty-bar {
   display: flex;
   flex-direction: row;
-  width: 46px;
-  height: 6px;
+  width: clamp(46px, 12cqw, 70px);
+  height: clamp(6px, 1.8cqw, 9px);
   background: #0a0a0a;
   border: 1px solid #000;
   margin-top: 1px;
@@ -980,8 +984,11 @@
 /* Planet name — clickable button styled to look like plain text. Click
    opens the system context menu. */
 .sector-zoom-popup .szp-planet-name {
+  position: relative;
+  z-index: 2;  /* lift above adjacent cells' icons so click can't be intercepted */
   font-family: 'Tahoma', sans-serif;
-  font-size: 10px;
+  /* clamp(min, scaled, max) — caps too-small / too-large */
+  font-size: clamp(10px, 3.5cqw, 16px);
   font-weight: normal;
   color: #80ff80;
   background: transparent;
