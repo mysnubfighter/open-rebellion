@@ -5,7 +5,7 @@ import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig({
   plugins: [react(), wasm(), topLevelAwait()],
-  server: { port: 5173 },
+  server: { port: 4180, strictPort: true },
   build: {
     target: 'esnext',
     sourcemap: true,
