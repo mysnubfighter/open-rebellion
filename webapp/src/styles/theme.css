@@ -85,7 +85,11 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  /* object-fit: fill stretches the BMP to the full panel container so the
+     inset rectangles (defined as percentages of the BMP's native size in
+     data/panel_insets.json) align with the BMP's dark slot regions.
+     Was 'contain' which letterboxed and misaligned content. */
+  object-fit: fill;
   image-rendering: pixelated;
   pointer-events: none;
 }
