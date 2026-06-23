@@ -508,8 +508,8 @@ export function App() {
               setActivePanel('manufacture');
               break;
             case 'galaxy-overview':
-              setSelectedSystemId(null);
-              setActivePanel(null);
+              // Open Loyalty (galaxy-wide control + popularity) overview panel
+              setActivePanel('loyalty');
               break;
             case 'objectives':
               setActivePanel('encyclopedia');

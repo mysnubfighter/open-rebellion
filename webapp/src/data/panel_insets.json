@@ -31,6 +31,16 @@
     "bmpSize": { "w": 640, "h": 480 },
     "inset": { "x": 18, "y": 18, "w": 604, "h": 444 }
   },
+  "strategy/10710": {
+    "label": "tact-mgr-alliance",
+    "bmpSize": { "w": 470, "h": 331 },
+    "inset": { "x": 16, "y": 16, "w": 438, "h": 274 }
+  },
+  "strategy/10711": {
+    "label": "tact-mgr-empire",
+    "bmpSize": { "w": 470, "h": 331 },
+    "inset": { "x": 16, "y": 16, "w": 438, "h": 274 }
+  },
   "strategy/11165": {
     "label": "side-portrait",
     "bmpSize": { "w": 235, "h": 304 },

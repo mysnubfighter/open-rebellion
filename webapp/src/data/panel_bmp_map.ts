@@ -11,6 +11,7 @@ import insets from './panel_insets.json';
 export type PanelBmpId =
   | 'common/10100' | 'common/10101' | 'common/10102' | 'common/10103'
   | 'common/20001' | 'common/20002'
+  | 'strategy/10710' | 'strategy/10711'
   | 'strategy/11100' | 'strategy/11101'
   | 'strategy/11165' | 'strategy/11554' | 'strategy/11555' | 'strategy/11556'
   | 'strategy/11557' | 'strategy/11558' | 'strategy/11559'
@@ -28,9 +29,9 @@ export const PANEL_BMP_MAP: Record<PanelKey, PanelBmpId> = {
   galaxy:       'common/10100',
   officers:     'common/10103',
   fleets:       'common/10103',
-  manufacture:  'common/10101',
+  manufacture:  'strategy/10710',  // REBEXE UIPanel_Init_TactMgrView Alliance chrome (470x331)
   missions:     'common/10103',
-  garrisons:    'common/10101',
+  garrisons:    'strategy/10710',  // same Tact Mgr View chrome
   research:     'common/10103',
   jedi:         'common/10103',
   bombardment:  'tactical/1000',
