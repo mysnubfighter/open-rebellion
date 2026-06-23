@@ -43,6 +43,7 @@ export const PANEL_BMP_MAP: Record<PanelKey, PanelBmpId> = {
   'galaxy-overview': 'strategy/11556',
   objectives:   'common/10103',
   'entity-editor': 'strategy/11100',  // dual-pane editor uses inner pane BMPs directly
+  'asset-gallery': 'common/10103',    // list-style chrome for sprite gallery
 };
 
 export interface PanelInset {

@@ -34,6 +34,7 @@ import {
 } from './components/panels/StubPanels';
 import { PanelShell } from './components/panels/PanelShell';
 import { EntityEditorPanel } from './components/panels/EntityEditorPanel';
+import { AssetGalleryPanel } from './components/panels/AssetGalleryPanel';
 import type { Faction, MissionKind } from './types/game';
 
 export function App() {
@@ -327,6 +328,11 @@ export function App() {
             onClose={() => setActivePanel(null)}
           />
         );
+      case 'asset-gallery':
+        // Renders every extracted BMP from REBEXE.EXE (2,075 sprites,
+        // 9 DLLs) with status badges. Brings every "GAP" + "UNUSED"
+        // sprite into the open_rebellion UI.
+        return <AssetGalleryPanel onClose={() => setActivePanel(null)} />;
       case 'galaxy':
       default:
         return null;
@@ -516,10 +522,10 @@ export function App() {
               setActivePanel('entity-editor');
               break;
             case 'agent-advice':
-              setAdvisorQueue((q) => [
-                ...q,
-                { id: Date.now(), priority: 'normal', text: `Advisor on ${sysName}: support stable, no immediate threats reported.` },
-              ]);
+              // Open the Asset Gallery (every REBEXE BMP) instead of an
+              // ad-hoc advisor message - this is the broader "what is
+              // available" view derived from the original game.
+              setActivePanel('asset-gallery');
               break;
           }
         };

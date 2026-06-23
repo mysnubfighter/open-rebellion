@@ -432,6 +432,140 @@ h4 { font-size: 12px; text-transform: uppercase; color: var(--text-dim); }
   cursor: not-allowed;
 }
 
+/* AssetGalleryPanel — every extracted BMP from REBEXE.EXE rendered
+   in a scrollable grid, organized by DLL with status badges. */
+.ag-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  background: #1E3EA6;
+  border-bottom: 1px solid #1A1F40;
+}
+.ag-tab {
+  background: transparent;
+  border: 1px solid #3A416C;
+  color: #00FFFF;
+  padding: 2px 8px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+}
+.ag-tab:hover { border-color: #00FFFF; color: #FFFFFF; }
+.ag-tab--active {
+  background: #00FF00;
+  color: #18149F;
+  border-color: #00FF00;
+  font-weight: bold;
+}
+.ag-filter {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  background: #1A1F40;
+  border-bottom: 1px solid #3A416C;
+}
+.ag-flt {
+  background: transparent;
+  color: #00FFFF;
+  border: 1px solid #3A416C;
+  padding: 1px 6px;
+  font-size: 10px;
+  cursor: pointer;
+}
+.ag-flt:hover { color: #FFFFFF; }
+.ag-flt--active {
+  background: #4080FF;
+  color: #FFFFFF;
+  border-color: #80B0FF;
+  font-weight: bold;
+}
+.ag-status-text {
+  margin-left: auto;
+  color: #80FFFF;
+  font-size: 10px;
+  font-family: 'Tahoma', sans-serif;
+}
+.ag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 4px;
+  padding: 4px;
+  max-height: 480px;
+  overflow-y: auto;
+  background: #0A0A2A;
+}
+.ag-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #1A1F40;
+  border: 1px solid #3A416C;
+  padding: 2px;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+}
+.ag-tile:hover {
+  border-color: #00FF00;
+  background: rgba(30, 62, 166, 0.5);
+}
+.ag-img {
+  width: 100%;
+  height: 56px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: #000;
+  pointer-events: none;
+}
+.ag-id {
+  color: #FFFFFF;
+  font-family: 'Consolas', monospace;
+  font-size: 10px;
+  margin-top: 1px;
+}
+.ag-badge {
+  font-size: 8px;
+  font-family: 'Tahoma', sans-serif;
+  padding: 0 3px;
+  margin-top: 1px;
+  border: 1px solid;
+}
+.ag-badge--used { color: #00FF00; border-color: #00FF00; }
+.ag-badge--gap { color: #FFFF40; border-color: #FFFF40; }
+.ag-badge--wasm_only { color: #80C0FF; border-color: #80C0FF; }
+.ag-badge--unused { color: #808080; border-color: #808080; }
+.ag-detail {
+  padding: 6px 8px;
+  background: #2A3050;
+  border-top: 1px solid #3A416C;
+}
+.ag-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #00FFFF;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 11px;
+}
+.ag-detail-row code {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 4px;
+  font-family: 'Consolas', monospace;
+}
+.ag-detail-close {
+  margin-left: auto;
+  background: transparent;
+  color: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  font-size: 12px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  cursor: pointer;
+}
+
 /* Native stub panel — placeholder content while engine commands ship */
 .np-stub {
   padding: 20px;

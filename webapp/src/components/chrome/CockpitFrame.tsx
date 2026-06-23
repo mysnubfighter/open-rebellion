@@ -15,7 +15,7 @@ export type PanelKey =
   | 'research' | 'jedi' | 'bombardment' | 'deathstar' | 'loyalty'
   | 'encyclopedia' | 'saveload' | 'messages' | 'options'
   | 'garrisons' | 'objectives' | 'galaxy-overview'
-  | 'entity-editor';
+  | 'entity-editor' | 'asset-gallery';
 
 export type GameSpeed = 'paused' | '1x' | '2x' | '4x';
 
